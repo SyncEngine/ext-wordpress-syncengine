@@ -1,9 +1,11 @@
 <?php
 /**
+ * @author Jory Hogeveen
+ *
  * Plugin Name: SyncEngine
  * Description: Integration Manager
  * Version: 1.0
- * Author: Jory Hogeveen
+ * Author: SyncEngine
  * Author URI: http://www.syncengine.io/
  */
 
