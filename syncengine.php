@@ -42,6 +42,9 @@ class SyncEngine
 			$name = ( is_object( $taxonomy ) ) ? $taxonomy->name : $taxonomy;
 			add_filter( 'rest_' . $name . '_query', array( $this, 'query_fields' ), 100000, 2 );
 		}
+
+		add_filter( 'rest_user_query', array( $this, 'query_fields' ), 100000, 2 );
+		add_filter( 'rest_attachment_query', array( $this, 'query_fields' ), 100000, 2 );
 	}
 
 	public function query_fields( $args, $request )
