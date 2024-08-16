@@ -46,6 +46,14 @@ class SyncEngine
 
 	public function query_fields( $args, $request )
 	{
+		if ( isset( $request['meta_query'] ) ) {
+			if ( isset( $args['meta_query'] ) ) {
+				$args['meta_query'][] = $request['meta_query'];
+			} else {
+				$args['meta_query'] = $request['meta_query'];
+			}
+		}
+
 		if ( isset( $request['meta_key'] ) ) {
 			$args['meta_key'] = $request['meta_key'];
 		}
