@@ -26,7 +26,7 @@ class SyncEngine
 	}
 
 	protected function __construct() {
-		add_action( 'init', array( $this, 'register_rest' ), 1000 );
+		add_action( 'init', array( $this, 'register_rest' ), 100000 );
 	}
 
 	public function register_rest()
