@@ -65,6 +65,10 @@ class SyncEngine
 			$args['meta_value'] = $request['meta_value'];
 		}
 
+		if ( isset( $request['meta_compare'] ) ) {
+			$args['meta_compare'] = $request['meta_compare'];
+		}
+
 		return $args;
 	}
 }
