@@ -57,15 +57,15 @@ class SyncEngine
 			}
 		}
 
-		if ( isset( $request['meta_key'] ) ) {
+		if ( isset( $request['meta_key'] ) && ! isset( $args['meta_key'] ) ) {
 			$args['meta_key'] = $request['meta_key'];
 		}
 
-		if ( isset( $request['meta_value'] ) ) {
+		if ( isset( $request['meta_value'] ) && ! isset( $args['meta_value'] ) ) {
 			$args['meta_value'] = $request['meta_value'];
 		}
 
-		if ( isset( $request['meta_compare'] ) ) {
+		if ( isset( $request['meta_compare'] ) && ! isset( $args['meta_compare'] ) ) {
 			$args['meta_compare'] = $request['meta_compare'];
 		}
 
