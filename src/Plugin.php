@@ -1,8 +1,8 @@
 <?php
 
-namespace SyncEngine\ExtWordpress;
+namespace SyncEngine\WordPress;
 
-use SyncEngine\ExtWordpress\Rest\RestQuery;
+use SyncEngine\WordPress\Rest\RestQuery;
 
 class Plugin
 {

@@ -32,8 +32,8 @@ class SyncEngine
 	protected function __construct() {
 		include "vendor/autoload.php";
 
-		if ( class_exists( 'SyncEngine\ExtWordpress\Plugin' ) ) {
-			\SyncEngine\ExtWordpress\Plugin::get_instance();
+		if ( class_exists( 'SyncEngine\WordPress\Plugin' ) ) {
+			\SyncEngine\WordPress\Plugin::get_instance();
 		}
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace SyncEngine\ExtWordpress\Rest;
+namespace SyncEngine\WordPress\Rest;
 
 class RestQuery
 {

@@ -10,7 +10,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "SyncEngine\\ExtWordpress\\": "src/"
+            "SyncEngine\\WordPress\\": "src/"
         }
     },
     "extra": {
