@@ -1,0 +1,20 @@
+{
+    "name": "syncengine/ext-wordpress",
+    "description": "WordPress plugin to enhance integration for SyncEngine",
+    "type": "wordpress-plugin",
+    "authors": [
+        {
+            "name": "JoryHogeveen",
+            "email": "info@syncengine.io"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "SyncEngine\\ExtWordpress\\": "src/"
+        }
+    },
+    "extra": {
+        "installer-name": "syncengine"
+    },
+    "require": {}
+}
