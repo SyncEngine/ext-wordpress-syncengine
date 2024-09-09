@@ -3,6 +3,7 @@
 namespace SyncEngine\WordPress;
 
 use SyncEngine\WordPress\Rest\RestQuery;
+use SyncEngine\WordPress\Rest\RestRoute;
 
 class Plugin
 {
@@ -17,6 +18,11 @@ class Plugin
 	}
 
 	protected function __construct() {
-		add_action( 'rest_api_init', array( RestQuery::get_instance(), 'register' ), 100000 );
+		add_action( 'rest_api_init', array( $this, 'action_rest_api_init' ), 100000 );
+	}
+
+	public function action_rest_api_init() {
+		RestQuery::get_instance()->register();
+		RestRoute::get_instance()->register();
 	}
 }
