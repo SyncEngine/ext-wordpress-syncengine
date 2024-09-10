@@ -14,9 +14,9 @@ class Client
 		$this->host        = $host;
 		$this->token       = $token;
 		$this->auth_header = $auth_header;
-		$this->version     = $version;
+		$this->version     = $version ?: 1;
 
-		$this->root = trailingslashit( $this->host ) . 'api/v' . $this->version . '/';
+		$this->root = trailingslashit( $this->host ) . 'api/';
 	}
 
 	public function request( $endpoint, $method = 'GET', $options = [] ) {
@@ -33,7 +33,19 @@ class Client
 			];
 		}
 
-		$url = $this->root . trailingslashit( ltrim( $endpoint, '/' ) );
+		$url = $this->root;
+
+		if ( isset( $options['version'] ) ) {
+			if ( ! empty( $options['version'] ) ) {
+				$url .= 'v' . $options['version'] . '/';
+			}
+		} else {
+			if ( ! empty( $this->version ) ) {
+				$url .= 'v' . $this->version . '/';
+			}
+		}
+
+		$url .= trailingslashit( ltrim( $endpoint, '/' ) );
 
 		$response = wp_remote_request( $url, $options );
 
@@ -45,7 +57,7 @@ class Client
 	}
 
 	public function status() {
-		$result = $this->request( 'status' );
+		$result = $this->request( 'status', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
 		}
@@ -53,7 +65,7 @@ class Client
 	}
 
 	public function listEndpoints() {
-		$result = $this->request( 'endpoints' );
+		$result = $this->request( 'endpoints', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
 		}
@@ -61,7 +73,7 @@ class Client
 	}
 
 	public function executeEndpoint( $endpoint ) {
-		$result = $this->request( $endpoint );
+		$result = $this->request( $endpoint, 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return [ 'success' => false, 'error' => $result->get_error_message() ];
 		}
