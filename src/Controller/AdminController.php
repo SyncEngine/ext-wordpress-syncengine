@@ -2,6 +2,7 @@
 
 namespace SyncEngine\WordPress\Controller;
 
+use SyncEngine\WordPress\Api\Client;
 use SyncEngine\WordPress\Service\Singleton;
 
 class AdminController extends Singleton
@@ -100,6 +101,14 @@ class AdminController extends Singleton
 	}
 
 	public function page() {
+		$settings = get_option( $this->option_name );
+
+		$api_settings = $settings['api'] ?? [];
+
+		$api = new Client( $api_settings['host'] ?? '', $api_settings['token'] ?? '', $api_settings['auth_header'] ?? '', $api_settings['version'] ?? 1 );
+
+		$status = $api->status();
+
 		?>
 		<div class="wrap">
 			<form action='options.php' method='post'>
@@ -109,6 +118,8 @@ class AdminController extends Singleton
 				do_settings_sections( 'syncengine' );
 				submit_button();
 				?>
+
+				Status: <?= $status ?>
 			</form>
 		</div>
 		<?php
