@@ -7,15 +7,16 @@ class Client
 	private $token;
 	private $host;
 	private $options;
-	private $version;
 	private $root;
 	private $localhost = false;
 
 	public function __construct( $host, $token, $options = [] ) {
 		$this->host    = $host;
 		$this->token   = $token;
-		$this->version = $options['version'] ?: 1;
 		$this->options = $options;
+		if ( empty( $this->options['version'] ) ) {
+			$this->options['version'] = 1;
+		}
 
 		$localhosts = [
 			'localhost',
