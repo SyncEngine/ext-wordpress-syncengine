@@ -68,6 +68,10 @@ class Client
 			return $response;
 		}
 
+		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
+			return wp_remote_retrieve_response_code( $response ) . ': ' . wp_remote_retrieve_response_message( $response ) . ' (' . $url . ')';
+		}
+
 		return json_decode( wp_remote_retrieve_body( $response ), true );
 	}
 
@@ -75,6 +79,9 @@ class Client
 		$result = $this->request( 'status', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
+		}
+		if ( is_string( $result ) ) {
+			return $result;
 		}
 		return $result['status'] ?? '';
 	}
@@ -84,6 +91,9 @@ class Client
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
 		}
+		if ( is_string( $result ) ) {
+			return $result;
+		}
 		return $result;
 	}
 
@@ -91,6 +101,9 @@ class Client
 		$result = $this->request( $endpoint, 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return [ 'success' => false, 'error' => $result->get_error_message() ];
+		}
+		if ( is_string( $result ) ) {
+			return [ 'success' => false, 'error' => $result ];
 		}
 		return $result;
 	}
