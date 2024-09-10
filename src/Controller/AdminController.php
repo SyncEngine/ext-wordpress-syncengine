@@ -7,6 +7,7 @@ use SyncEngine\WordPress\Service\Singleton;
 class AdminController extends Singleton
 {
 	const CAPABILITY = 'syncengine';
+	protected $option_name = 'syncengine';
 
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'action_admin_menu' ) );
@@ -49,7 +50,7 @@ class AdminController extends Singleton
 				'name'        => 'host',
 				'placeholder' => __( 'https://' ),
 				'section'     => 'api',
-				'setting'     => 'syncengine',
+				'setting'     => $this->option_name,
 			]
 		);
 
@@ -64,7 +65,7 @@ class AdminController extends Singleton
 				'name'        => 'token',
 				'placeholder' => __( '#' ),
 				'section'     => 'api',
-				'setting'     => 'syncengine',
+				'setting'     => $this->option_name,
 			]
 		);
 
@@ -79,7 +80,7 @@ class AdminController extends Singleton
 				'name'        => 'version',
 				'placeholder' => __( '1' ),
 				'section'     => 'api',
-				'setting'     => 'syncengine',
+				'setting'     => $this->option_name,
 			]
 		);
 	}
