@@ -97,6 +97,11 @@ class Client
 		return $result['status'] ?? '';
 	}
 
+	public function isOnline() {
+		$status = $this->status();
+		return 'online' === strtolower( $status );
+	}
+
 	public function listEndpoints() {
 		$cache = get_transient( 'syncengine_api_endpoints' );
 		if ( $cache ) {
