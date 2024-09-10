@@ -135,7 +135,8 @@ class AdminController extends Singleton
 			$api_settings,
 		);
 
-		$status = $api->status();
+		$status    = $api->status();
+		$endpoints = $api->listEndpoints();
 
 		?>
 		<div class="wrap">
@@ -147,7 +148,15 @@ class AdminController extends Singleton
 				submit_button();
 				?>
 
-				Status: <?= $status ?>
+				<p>Status: <?= $status ?></p>
+				<?php if ( $api->isOnline() && $endpoints ): ?>
+				<div>
+					<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
+					<?php foreach ( $endpoints as $endpoint ): ?>
+					<button class="button" href="<?= $endpoint['link'] ?>"><?= $endpoint['name'] ?></button>
+					<?php endforeach; ?>
+				</div>
+				<?php endif; ?>
 			</form>
 		</div>
 		<?php
