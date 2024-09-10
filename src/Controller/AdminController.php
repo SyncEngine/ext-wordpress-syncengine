@@ -105,7 +105,12 @@ class AdminController extends Singleton
 
 		$api_settings = $settings['api'] ?? [];
 
-		$api = new Client( $api_settings['host'] ?? '', $api_settings['token'] ?? '', $api_settings['auth_header'] ?? '', $api_settings['version'] ?? 1 );
+		$api = new Client(
+			$api_settings['host'] ?? '',
+			$api_settings['token'] ?? '',
+			$api_settings['version'] ?? 1,
+			$api_settings['auth_header'] ?? ''
+		);
 
 		$status = $api->status();
 

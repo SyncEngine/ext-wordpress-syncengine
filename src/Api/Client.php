@@ -10,7 +10,7 @@ class Client
 	private $version;
 	private $root;
 
-	public function __construct( $host, $token, $auth_header, $version ) {
+	public function __construct( $host, $token, $version = 1, $auth_header = null ) {
 		$this->host        = $host;
 		$this->token       = $token;
 		$this->auth_header = $auth_header;
