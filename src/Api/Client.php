@@ -6,16 +6,16 @@ class Client
 {
 	private $token;
 	private $host;
-	private $auth_header;
+	private $options;
 	private $version;
 	private $root;
 	private $localhost = false;
 
-	public function __construct( $host, $token, $version = 1, $auth_header = null ) {
-		$this->host        = $host;
-		$this->token       = $token;
-		$this->auth_header = $auth_header;
-		$this->version     = $version ?: 1;
+	public function __construct( $host, $token, $options = [] ) {
+		$this->host    = $host;
+		$this->token   = $token;
+		$this->version = $options['version'] ?: 1;
+		$this->options = $options;
 
 		$localhosts = [
 			'localhost',
@@ -33,29 +33,27 @@ class Client
 	}
 
 	public function request( $endpoint, $method = 'GET', $options = [] ) {
+
+		$options = array_merge( $this->options, $options );
+
 		$options['method'] = $method;
 
-		if ( empty( $this->auth_header ) ) {
+		if ( empty( $options['auth_header'] ) ) {
 			$options['headers'] = [
 				'Authorization' => 'Bearer ' . $this->token,
 			];
 		}
 		else {
 			$options['headers'] = [
-				$this->auth_header => $this->token,
+				$options['auth_header'] => $this->token,
 			];
 		}
+		unset( $options['auth_header'] );
 
 		$url = $this->root;
 
-		if ( isset( $options['version'] ) ) {
-			if ( ! empty( $options['version'] ) ) {
-				$url .= 'v' . $options['version'] . '/';
-			}
-		} else {
-			if ( ! empty( $this->version ) ) {
-				$url .= 'v' . $this->version . '/';
-			}
+		if ( ! empty( $options['version'] ) ) {
+			$url .= 'v' . $options['version'] . '/';
 		}
 
 		$url .= trailingslashit( ltrim( $endpoint, '/' ) );
