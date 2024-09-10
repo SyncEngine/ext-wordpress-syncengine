@@ -84,6 +84,7 @@ class AdminController extends Singleton
 			]
 		);
 
+		/*
 		add_settings_field(
 			'version',
 			__( 'Version' ),
@@ -98,6 +99,7 @@ class AdminController extends Singleton
 				'setting'     => $this->option_name,
 			]
 		);
+		*/
 	}
 
 	public function page() {
