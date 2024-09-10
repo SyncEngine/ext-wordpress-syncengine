@@ -17,7 +17,8 @@ SyncEngine::get_instance();
 
 class SyncEngine
 {
-	const DIR = __DIR__;
+	private static $dir = '';
+	private static $url = '';
 
 	private static $_instance;
 
@@ -29,8 +30,21 @@ class SyncEngine
 		return self::$_instance;
 	}
 
+	public static function get_dir()
+	{
+		return self::$dir;
+	}
+
+	public static function get_url()
+	{
+		return self::$url;
+	}
+
 	protected function __construct() {
 		include "vendor/autoload.php";
+
+		self::$dir = plugin_dir_path( __FILE__ );
+		self::$url = plugin_dir_url( __FILE__ );
 
 		if ( class_exists( 'SyncEngine\WordPress\Plugin' ) ) {
 			\SyncEngine\WordPress\Plugin::get_instance();
