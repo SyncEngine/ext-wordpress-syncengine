@@ -66,10 +66,12 @@ class Client
 		$response = wp_remote_request( $url, $options );
 
 		if ( is_wp_error( $response ) ) {
+			delete_transient( 'syncengine_api_status' );
 			return $response;
 		}
 
 		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
+			delete_transient( 'syncengine_api_status' );
 			return wp_remote_retrieve_response_code( $response ) . ': ' . wp_remote_retrieve_response_message( $response ) . ' (' . $url . ')';
 		}
 
