@@ -100,8 +100,7 @@ class Client
 	}
 
 	public function isOnline() {
-		$status = $this->status();
-		return 'online' === strtolower( $status );
+		return 'online' === strtolower( (string) $this->status() );
 	}
 
 	public function listEndpoints() {
