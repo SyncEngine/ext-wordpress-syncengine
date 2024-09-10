@@ -41,7 +41,7 @@ class AdminController extends Singleton
 	public function register_section_api() {
 		add_settings_section(
 			'api',
-			__( 'SyncEngine API' ),
+			__( 'Connect to API' ),
 			array( $this, 'settings_api_section' ),
 			'syncengine'
 		);
