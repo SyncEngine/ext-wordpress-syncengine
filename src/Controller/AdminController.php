@@ -34,6 +34,11 @@ class AdminController extends Singleton
 	public function action_admin_init() {
 		register_setting( 'syncengine', 'syncengine' );
 
+		$this->register_section_api();
+		//$this->register_section_hooks();
+	}
+
+	public function register_section_api() {
 		add_settings_section(
 			'api',
 			__( 'SyncEngine API' ),
@@ -100,6 +105,23 @@ class AdminController extends Singleton
 			]
 		);
 		*/
+	}
+
+	public function register_section_hooks() {
+		add_settings_section(
+			'hooks',
+			__( 'SyncEngine Hooks' ),
+			array( $this, 'settings_api_section' ),
+			'syncengine'
+		);
+
+		add_settings_field(
+			'hooks',
+			__( 'Hooks' ),
+			array( $this, 'settings_api_field_hooks' ),
+			'syncengine',
+			'hooks',
+		);
 	}
 
 	public function page() {
