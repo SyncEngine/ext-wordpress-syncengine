@@ -110,7 +110,7 @@ class Client
 			return $cache;
 		}
 
-		$result = $this->request( 'endpoints', 'GET', [ 'version' => false ] );
+		$result = $this->request( 'endpoint', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
 		}
@@ -126,7 +126,7 @@ class Client
 	}
 
 	public function executeEndpoint( $endpoint ) {
-		$result = $this->request( $endpoint, 'GET', [ 'version' => false ] );
+		$result = $this->request( 'endpoint/' . $endpoint, 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return [ 'success' => false, 'error' => $result->get_error_message() ];
 		}
