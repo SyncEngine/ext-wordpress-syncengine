@@ -2,9 +2,7 @@
 
 namespace SyncEngine\WordPress\Api;
 
-use SyncEngine\WordPress\Service\Singleton;
-
-class Client extends Singleton
+class Client
 {
 	private $token;
 	private $host;
@@ -12,7 +10,7 @@ class Client extends Singleton
 	private $version;
 	private $root;
 
-	public function init( $host, $token, $auth_header, $version ) {
+	public function __construct( $host, $token, $auth_header, $version ) {
 		$this->host        = $host;
 		$this->token       = $token;
 		$this->auth_header = $auth_header;
