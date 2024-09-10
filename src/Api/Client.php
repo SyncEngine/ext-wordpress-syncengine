@@ -9,12 +9,25 @@ class Client
 	private $auth_header;
 	private $version;
 	private $root;
+	private $localhost = false;
 
 	public function __construct( $host, $token, $version = 1, $auth_header = null ) {
 		$this->host        = $host;
 		$this->token       = $token;
 		$this->auth_header = $auth_header;
 		$this->version     = $version ?: 1;
+
+		$localhosts = [
+			'localhost',
+			'127.0.0.1',
+			'::1',
+		];
+
+		$parts = parse_url( $host );
+
+		if ( in_array( $parts['host'], $localhosts ) ) {
+			$this->localhost = true;
+		}
 
 		$this->root = trailingslashit( $this->host ) . 'api/';
 	}
@@ -46,6 +59,10 @@ class Client
 		}
 
 		$url .= trailingslashit( ltrim( $endpoint, '/' ) );
+
+		if ( $this->localhost ) {
+			$options['sslverify'] = false;
+		}
 
 		$response = wp_remote_request( $url, $options );
 
