@@ -141,7 +141,10 @@ class AdminController extends Singleton
 		?>
 		<div class="wrap">
 			<form action='options.php' method='post'>
-				<h1><?= __( 'SyncEngine', 'syncengine' ) ?></h1>
+				<h1>
+					<img src="<?= \SyncEngine::get_url() . 'assets/img/icon.svg' ?>" alt="SyncEngine" style="width: 1.2em;height: 1.2em;display: inline-block;vertical-align: bottom;margin-right: .2em;"/>
+					<?= __( 'SyncEngine', 'syncengine' ) ?>
+				</h1>
 				<?php
 				settings_fields( 'syncengine' );
 				do_settings_sections( 'syncengine' );
