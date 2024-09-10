@@ -2,20 +2,10 @@
 
 namespace SyncEngine\WordPress\Rest;
 
-class RestQuery
+use SyncEngine\WordPress\Service\Singleton;
+
+class RestQuery extends Singleton
 {
-	private static $_instance;
-
-	public static function get_instance()
-	{
-		if ( ! isset( self::$_instance ) ) {
-			self::$_instance = new self();
-		}
-		return self::$_instance;
-	}
-
-	protected function __construct() {}
-
 	public function register()
 	{
 		$post_types = get_post_types();
