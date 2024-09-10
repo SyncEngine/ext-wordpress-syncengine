@@ -77,6 +77,11 @@ class Client
 	}
 
 	public function status() {
+		$cache = get_transient( 'syncengine_api_status' );
+		if ( $cache ) {
+			return $cache;
+		}
+
 		$result = $this->request( 'status', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
@@ -84,10 +89,20 @@ class Client
 		if ( is_string( $result ) ) {
 			return $result;
 		}
+
+		if ( ! empty( $result['status'] ) ) {
+			set_transient( 'syncengine_api_status', $result['status'], HOUR_IN_SECONDS );
+		}
+
 		return $result['status'] ?? '';
 	}
 
 	public function listEndpoints() {
+		$cache = get_transient( 'syncengine_api_endpoints' );
+		if ( $cache ) {
+			return $cache;
+		}
+
 		$result = $this->request( 'endpoints', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
 			return $result->get_error_message();
@@ -95,6 +110,11 @@ class Client
 		if ( is_string( $result ) ) {
 			return $result;
 		}
+
+		if ( ! empty( $result ) ) {
+			set_transient( 'syncengine_api_endpoints', $result, HOUR_IN_SECONDS );
+		}
+
 		return $result;
 	}
 
