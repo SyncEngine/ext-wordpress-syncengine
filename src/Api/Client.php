@@ -38,21 +38,33 @@ class Client
 		$response = wp_remote_request( $url, $options );
 
 		if ( is_wp_error( $response ) ) {
-			wp_die( $response );
+			return $response;
 		}
 
 		return json_decode( wp_remote_retrieve_body( $response ), true );
 	}
 
 	public function status() {
-		return $this->request( 'status' );
+		$result = $this->request( 'status' );
+		if ( is_wp_error( $result ) ) {
+			return $result->get_error_message();
+		}
+		return $result['status'] ?? '';
 	}
 
 	public function listEndpoints() {
-		return $this->request( 'endpoints' );
+		$result = $this->request( 'endpoints' );
+		if ( is_wp_error( $result ) ) {
+			return $result->get_error_message();
+		}
+		return $result;
 	}
 
 	public function executeEndpoint( $endpoint ) {
-		return $this->request( $endpoint );
+		$result = $this->request( $endpoint );
+		if ( is_wp_error( $result ) ) {
+			return [ 'success' => false, 'error' => $result->get_error_message() ];
+		}
+		return $result;
 	}
 }
