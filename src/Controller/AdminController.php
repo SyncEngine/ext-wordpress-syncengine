@@ -70,6 +70,20 @@ class AdminController extends Singleton
 		);
 
 		add_settings_field(
+			'auth_header',
+			__( 'Auth Header' ),
+			array( $this, 'settings_api_field_input' ),
+			'syncengine',
+			'api',
+			[
+				'name'        => 'auth_header',
+				'placeholder' => __( 'Bearer token (default)' ),
+				'section'     => 'api',
+				'setting'     => $this->option_name,
+			]
+		);
+
+		add_settings_field(
 			'version',
 			__( 'Version' ),
 			array( $this, 'settings_api_field_input' ),
