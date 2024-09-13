@@ -142,6 +142,11 @@ class AdminController extends Singleton
 			$url = remove_query_arg( 'refresh', $url );
 		}
 
+		if ( ! empty( $_GET['execute_endpoint'] ) ) {
+			$result = $api->executeEndpoint( $_GET['execute_endpoint'] );
+			$url = remove_query_arg( 'execute_endpoint', $url );
+		}
+
 		$status    = $api->status();
 		$endpoints = $api->listEndpoints();
 
@@ -165,10 +170,18 @@ class AdminController extends Singleton
 				<div>
 					<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
 					<?php foreach ( $endpoints as $endpoint ): ?>
-					<button class="button" href="<?= $endpoint['link'] ?>"><?= $endpoint['name'] ?></button>
+					<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpoint['endpoint'], $url ) ?>"><?= $endpoint['name'] ?></a>
 					<?php endforeach; ?>
 				</div>
 				<?php endif; ?>
+	
+				<?php if ( ! empty( $result ) ): ?>
+				<div>
+					<h2><?= __( 'Execute results', 'syncengine' ) ?></h2>
+					<code><?= $result ?></code>
+				</div>
+				<?php endif; ?>
+			
 			</form>
 		</div>
 		<?php
