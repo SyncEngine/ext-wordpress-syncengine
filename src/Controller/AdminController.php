@@ -179,8 +179,8 @@ class AdminController extends Singleton
 			<?php if ( ! empty( $result ) ): ?>
 			<div>
 				<h2><?= __( 'Execute results', 'syncengine' ) ?></h2>
-				<div>
-					<pre><?= json_encode( $result, JSON_PRETTY_PRINT ) ?></pre>
+				<div class="code" style="background: #fff; padding: 1em;">
+					<pre style="margin: 0"><?= json_encode( $result, JSON_PRETTY_PRINT ) ?></pre>
 				</div>
 			</div>
 			<?php endif; ?>
