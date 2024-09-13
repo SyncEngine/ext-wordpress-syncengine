@@ -162,27 +162,28 @@ class AdminController extends Singleton
 				do_settings_sections( 'syncengine' );
 				submit_button();
 				?>
-
-				<p>Status: <?= $status ?></p>
-	
-				<a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>">Refresh</a>
-				<?php if ( $api->isOnline() && $endpoints ): ?>
-				<div>
-					<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
-					<?php foreach ( $endpoints as $endpoint ): ?>
-					<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpoint['endpoint'], $url ) ?>"><?= $endpoint['name'] ?></a>
-					<?php endforeach; ?>
-				</div>
-				<?php endif; ?>
-	
-				<?php if ( ! empty( $result ) ): ?>
-				<div>
-					<h2><?= __( 'Execute results', 'syncengine' ) ?></h2>
-					<code><?= $result ?></code>
-				</div>
-				<?php endif; ?>
-			
 			</form>
+
+			<p>Status: <?= $status ?></p>
+
+			<a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>">Refresh</a>
+			<?php if ( $api->isOnline() && $endpoints ): ?>
+			<div>
+				<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
+				<?php foreach ( $endpoints as $endpoint ): ?>
+				<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpoint['endpoint'], $url ) ?>"><?= $endpoint['name'] ?></a>
+				<?php endforeach; ?>
+			</div>
+			<?php endif; ?>
+
+			<?php if ( ! empty( $result ) ): ?>
+			<div>
+				<h2><?= __( 'Execute results', 'syncengine' ) ?></h2>
+				<div>
+					<pre><?= json_encode( $result, JSON_PRETTY_PRINT ) ?></pre>
+				</div>
+			</div>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
