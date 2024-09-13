@@ -75,9 +75,19 @@ class Client
 			return $response;
 		}
 
-		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
+		$code = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( $code !== 200 ) {
 			$this->clearCache();
-			return wp_remote_retrieve_response_code( $response ) . ': ' . wp_remote_retrieve_response_message( $response ) . ' (' . $url . ')';
+
+			$message = wp_remote_retrieve_response_message( $response );
+
+			$body = json_decode( wp_remote_retrieve_body( $response ), true );
+			if ( isset( $body['message'] ) ) {
+				$message .= ' "' . $body['message'] . '"';
+			}
+
+			return $code . ': ' . $message . ' (' . $url . ')';
 		}
 
 		return json_decode( wp_remote_retrieve_body( $response ), true );
