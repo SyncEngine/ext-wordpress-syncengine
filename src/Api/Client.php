@@ -33,6 +33,11 @@ class Client
 		$this->root = trailingslashit( $this->host ) . 'api/';
 	}
 
+	public function clearCache() {
+		delete_transient( 'syncengine_api_status' );
+		delete_transient( 'syncengine_api_endpoints' );
+	}
+
 	public function request( $endpoint, $method = 'GET', $options = [] ) {
 
 		$options = array_merge( $this->options, $options );
@@ -66,12 +71,12 @@ class Client
 		$response = wp_remote_request( $url, $options );
 
 		if ( is_wp_error( $response ) ) {
-			delete_transient( 'syncengine_api_status' );
+			$this->clearCache();
 			return $response;
 		}
 
 		if ( wp_remote_retrieve_response_code( $response ) != 200 ) {
-			delete_transient( 'syncengine_api_status' );
+			$this->clearCache();
 			return wp_remote_retrieve_response_code( $response ) . ': ' . wp_remote_retrieve_response_message( $response ) . ' (' . $url . ')';
 		}
 
@@ -93,7 +98,7 @@ class Client
 		}
 
 		if ( ! empty( $result['status'] ) ) {
-			set_transient( 'syncengine_api_status', $result['status'], HOUR_IN_SECONDS );
+			set_transient( 'syncengine_api_status', $result['status'] );
 		}
 
 		return $result['status'] ?? '';
@@ -118,7 +123,7 @@ class Client
 		}
 
 		if ( ! empty( $result ) ) {
-			set_transient( 'syncengine_api_endpoints', $result, HOUR_IN_SECONDS );
+			set_transient( 'syncengine_api_endpoints', $result );
 		}
 
 		return $result;

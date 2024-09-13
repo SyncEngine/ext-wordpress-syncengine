@@ -127,6 +127,8 @@ class AdminController extends Singleton
 	public function page() {
 		$settings = get_option( $this->option_name );
 
+		$url = remove_query_arg( 'settings-updated' );
+
 		$api_settings = $settings['api'] ?? [];
 
 		$api = new Client(
@@ -134,6 +136,11 @@ class AdminController extends Singleton
 			$api_settings['token'] ?? '',
 			$api_settings,
 		);
+
+		if ( ! empty( $_GET['refresh'] ) || ! empty( $_GET['settings-updated'] ) ) {
+			$api->clearCache();
+			$url = remove_query_arg( 'refresh', $url );
+		}
 
 		$status    = $api->status();
 		$endpoints = $api->listEndpoints();
@@ -152,6 +159,8 @@ class AdminController extends Singleton
 				?>
 
 				<p>Status: <?= $status ?></p>
+	
+				<a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>">Refresh</a>
 				<?php if ( $api->isOnline() && $endpoints ): ?>
 				<div>
 					<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
