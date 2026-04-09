@@ -72,7 +72,12 @@ abstract class AbstractPlatformService extends Singleton
 			$map[ $event ] = array_values( array_unique( $endpoints ) );
 		}
 
-		set_transient( $this->getTransientKey(), $map, 5 * MINUTE_IN_SECONDS );
+		$ttl = (int) apply_filters( 'syncengine_trigger_endpoint_map_ttl', 5 * MINUTE_IN_SECONDS, $this->getSource() );
+		if ( $ttl > 0 ) {
+			set_transient( $this->getTransientKey(), $map, $ttl );
+		} else {
+			delete_transient( $this->getTransientKey() );
+		}
 
 		return $map;
 	}
