@@ -2,7 +2,7 @@
 
 namespace SyncEngine\WordPress\Service;
 
-class SyncEngineErrorNoticeService extends Singleton
+class ErrorNoticeService extends Singleton
 {
 	/**
 	 * Display an error as an admin notice using WordPress's built-in admin_notices hook.

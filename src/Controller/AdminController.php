@@ -3,8 +3,8 @@
 namespace SyncEngine\WordPress\Controller;
 
 use SyncEngine\WordPress\Api\Client;
-use SyncEngine\WordPress\Service\SyncEngineErrorNoticeService;
-use SyncEngine\WordPress\Service\SyncEngineDispatchLogService;
+use SyncEngine\WordPress\Service\ErrorNoticeService;
+use SyncEngine\WordPress\Service\DispatchLogService;
 use SyncEngine\WordPress\Service\Singleton;
 
 class AdminController extends Singleton
@@ -151,7 +151,7 @@ class AdminController extends Singleton
 		}
 
 		if ( ! empty( $_GET['clear_dispatch_log'] ) ) {
-			SyncEngineDispatchLogService::get_instance()->clearLog();
+			DispatchLogService::get_instance()->clearLog();
 			$url = remove_query_arg( 'clear_dispatch_log', $url );
 		}
 
@@ -169,10 +169,10 @@ class AdminController extends Singleton
 
 		$status    = $api->status();
 		$endpoints = $api->listEndpoints();
-		$dispatchLog = SyncEngineDispatchLogService::get_instance()->getLatest( 25 );
+		$dispatchLog = DispatchLogService::get_instance()->getLatest( 25 );
 
 		if ( is_wp_error( $endpoints ) ) {
-			SyncEngineErrorNoticeService::get_instance()->addError( 'listEndpoints', $endpoints );
+			ErrorNoticeService::get_instance()->addError( 'listEndpoints', $endpoints );
 			$endpoints = [];
 		}
 

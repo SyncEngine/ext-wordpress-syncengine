@@ -4,7 +4,7 @@ namespace SyncEngine\WordPress\Service;
 
 use SyncEngine\WordPress\Api\Client;
 
-class SyncEngineClientService extends Singleton
+class ClientService extends Singleton
 {
 	const OPTION_NAME = 'syncengine';
 

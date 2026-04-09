@@ -2,7 +2,7 @@
 
 namespace SyncEngine\WordPress\Service;
 
-class SyncEngineEndpointDispatcherService extends Singleton
+class EndpointDispatcherService extends Singleton
 {
 	/**
 	 * @param array<int, string> $endpoints
@@ -12,7 +12,7 @@ class SyncEngineEndpointDispatcherService extends Singleton
 	 * @return array<string, mixed>
 	 */
 	public function triggerEndpoints( $endpoints, $payload = [], $meta = [] ) {
-		$client = SyncEngineClientService::get_instance()->getClient();
+		$client = ClientService::get_instance()->getClient();
 		if ( ! $client ) {
 			return [];
 		}
@@ -30,7 +30,7 @@ class SyncEngineEndpointDispatcherService extends Singleton
 			$result = $client->triggerEndpoint( $endpoint, $payload );
 			$results[ $endpoint ] = $result;
 
-			SyncEngineDispatchLogService::get_instance()->add( $source, $trigger, $endpoint, $payload, (array) $result );
+			DispatchLogService::get_instance()->add( $source, $trigger, $endpoint, $payload, (array) $result );
 		}
 
 		return $results;

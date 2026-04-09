@@ -2,7 +2,7 @@
 
 namespace SyncEngine\WordPress\Service;
 
-class SyncEngineDispatchLogService extends Singleton
+class DispatchLogService extends Singleton
 {
 	const OPTION_LOG = 'syncengine_dispatch_log';
 	const MAX_LOG_ITEMS = 200;
