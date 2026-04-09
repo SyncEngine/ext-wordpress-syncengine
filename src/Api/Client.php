@@ -125,38 +125,6 @@ class Client
 	/**
 	 * @return array|\WP_Error
 	 */
-	public function listEndpoints() {
-		$cache = get_transient( 'syncengine_api_endpoints' );
-		if ( is_array( $cache ) ) {
-			return $cache;
-		}
-
-		$result = $this->request( 'endpoint', 'GET', [ 'version' => false ] );
-		if ( is_wp_error( $result ) ) {
-			return $result;
-		}
-
-		if ( is_array( $result ) && ! empty( $result ) ) {
-			set_transient( 'syncengine_api_endpoints', $result );
-		}
-
-		return $result ?? [];
-	}
-
-	public function executeEndpoint( $endpoint ) {
-		$result = $this->request( 'endpoint/' . $endpoint, 'GET', [ 'version' => false ] );
-		if ( is_wp_error( $result ) ) {
-			return [ 'success' => false, 'error' => $result->get_error_message() ];
-		}
-		if ( is_string( $result ) ) {
-			return [ 'success' => false, 'error' => $result ];
-		}
-		return $result;
-	}
-
-	/**
-	 * @return array|\WP_Error
-	 */
 	public function listAutomations() {
 		$result = $this->request( 'rest/v1/automation', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
@@ -176,9 +144,41 @@ class Client
 		return $result ?? [];
 	}
 
-	public function triggerEndpoint( $endpoint, $payload = [] ) {
+	/**
+	 * @return array|\WP_Error
+	 */
+	public function listEndpoints() {
+		$cache = get_transient( 'syncengine_api_endpoints' );
+		if ( is_array( $cache ) ) {
+			return $cache;
+		}
+
+		$result = $this->request( 'endpoint', 'GET', [ 'version' => false ] );
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( is_array( $result ) && ! empty( $result ) ) {
+			set_transient( 'syncengine_api_endpoints', $result );
+		}
+
+		return $result ?? [];
+	}
+
+	public function executeEndpoint( $endpoint ) {
+		return $this->triggerEndpoint( $endpoint, [], 'execute' );
+	}
+
+	public function triggerEndpoint( $endpoint, $payload = [], $action = 'execute' ) {
+		$endpoint = trim( (string) $endpoint, '/' );
+		$action = trim( (string) $action, '/' );
+
+		if ( '' === $endpoint || '' === $action ) {
+			return [ 'success' => false, 'error' => 'Invalid endpoint action request.' ];
+		}
+
 		$result = $this->request(
-			'endpoint/' . $endpoint . '/execute',
+			'endpoint/' . $endpoint . '/' . $action,
 			'POST',
 			[
 				'version' => false,
