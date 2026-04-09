@@ -41,7 +41,7 @@ class SyncEngine
 	}
 
 	protected function __construct() {
-		include "vendor/autoload.php";
+		include_once "vendor/autoload.php";
 
 		self::$dir = plugin_dir_path( __FILE__ );
 		self::$url = plugin_dir_url( __FILE__ );
