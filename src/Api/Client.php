@@ -62,7 +62,7 @@ class Client
 			$url .= 'v' . $options['version'] . '/';
 		}
 
-		$url .= trailingslashit( ltrim( $endpoint, '/' ) );
+		$url .= ltrim( $endpoint, '/' );
 
 		if ( $this->localhost ) {
 			$options['sslverify'] = false;
