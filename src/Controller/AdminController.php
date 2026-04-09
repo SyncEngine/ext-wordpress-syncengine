@@ -34,10 +34,16 @@ class AdminController extends Singleton
 	}
 
 	public function action_admin_init() {
-		register_setting( 'syncengine', 'syncengine' );
+		register_setting(
+			'syncengine',
+			'syncengine',
+			[
+				'sanitize_callback' => [ $this, 'sanitize_settings' ],
+			]
+		);
 
 		$this->register_section_api();
-		//$this->register_section_hooks();
+		$this->register_section_hooks();
 	}
 
 	public function register_section_api() {
@@ -278,5 +284,147 @@ class AdminController extends Singleton
 		?>
 		<input id="<?= $id ?>" type="<?= $type ?>" name="<?= $name; ?>" value="<?= $value; ?>" placeholder="<?= $args['placeholder'] ?? $args['label'] ?? $args['title'] ?>" />
 		<?php
+	}
+
+	public function settings_api_field_hooks() {
+		$options = (array) get_option( $this->option_name );
+		$hooks = array_values( array_filter( (array) ( $options['hooks']['custom'] ?? [] ), 'is_array' ) );
+		$rowCount = max( count( $hooks ) + 3, 5 );
+
+		$api_settings = (array) ( $options['api'] ?? [] );
+		$api = new Client(
+			$api_settings['host'] ?? '',
+			$api_settings['token'] ?? '',
+			$api_settings,
+		);
+		$availableEndpoints = $api->listEndpoints();
+		if ( is_wp_error( $availableEndpoints ) || ! is_array( $availableEndpoints ) ) {
+			$availableEndpoints = [];
+		}
+		?>
+		<p><?= esc_html__( 'Define extra WordPress action hooks that should directly trigger one or more SyncEngine endpoints. Endpoints must be entered as endpoint slugs, separated by commas.', 'syncengine' ) ?></p>
+		<table class="widefat striped" style="max-width: 1100px;">
+			<thead>
+				<tr>
+					<th><?= esc_html__( 'WordPress Hook', 'syncengine' ) ?></th>
+					<th><?= esc_html__( 'Endpoint Slugs', 'syncengine' ) ?></th>
+					<th style="width: 110px;"><?= esc_html__( 'Priority', 'syncengine' ) ?></th>
+					<th style="width: 140px;"><?= esc_html__( 'Accepted Args', 'syncengine' ) ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php for ( $index = 0; $index < $rowCount; $index++ ): ?>
+				<?php $row = (array) ( $hooks[ $index ] ?? [] ); ?>
+				<tr>
+					<td>
+						<input
+							type="text"
+							name="<?= esc_attr( $this->option_name ) ?>[hooks][custom][<?= (int) $index ?>][hook]"
+							value="<?= esc_attr( (string) ( $row['hook'] ?? '' ) ) ?>"
+							placeholder="save_post"
+							style="width: 100%;"
+						/>
+					</td>
+					<td>
+						<input
+							type="text"
+							name="<?= esc_attr( $this->option_name ) ?>[hooks][custom][<?= (int) $index ?>][endpoints]"
+							value="<?= esc_attr( implode( ', ', array_values( (array) ( $row['endpoints'] ?? [] ) ) ) ) ?>"
+							placeholder="automation/my-endpoint, automation/my-other-endpoint"
+							style="width: 100%;"
+						/>
+					</td>
+					<td>
+						<input
+							type="number"
+							min="1"
+							step="1"
+							name="<?= esc_attr( $this->option_name ) ?>[hooks][custom][<?= (int) $index ?>][priority]"
+							value="<?= esc_attr( (string) ( $row['priority'] ?? 10 ) ) ?>"
+							style="width: 100%;"
+						/>
+					</td>
+					<td>
+						<input
+							type="number"
+							min="0"
+							step="1"
+							name="<?= esc_attr( $this->option_name ) ?>[hooks][custom][<?= (int) $index ?>][accepted_args]"
+							value="<?= esc_attr( (string) ( $row['accepted_args'] ?? 99 ) ) ?>"
+							style="width: 100%;"
+						/>
+					</td>
+				</tr>
+				<?php endfor; ?>
+			</tbody>
+		</table>
+		<p class="description">
+			<?= esc_html__( 'Use WordPress action hook names only. Each configured hook dispatches a payload containing hook metadata and normalized hook arguments.', 'syncengine' ) ?>
+		</p>
+		<?php if ( ! empty( $availableEndpoints ) ): ?>
+		<p class="description"><strong><?= esc_html__( 'Available endpoint slugs:', 'syncengine' ) ?></strong></p>
+		<div class="code" style="background: #fff; padding: 1em; max-width: 1100px; max-height: 220px; overflow: auto;">
+			<pre style="margin: 0"><?php
+				$endpointNames = [];
+				foreach ( $availableEndpoints as $endpoint ) {
+					if ( empty( $endpoint['endpoint'] ) ) {
+						continue;
+					}
+					$endpointNames[] = (string) $endpoint['endpoint'];
+				}
+				echo esc_html( implode( PHP_EOL, $endpointNames ) );
+			?></pre>
+		</div>
+		<?php endif; ?>
+		<?php
+	}
+
+	public function sanitize_settings( $settings ) {
+		$settings = is_array( $settings ) ? $settings : [];
+		$existing = (array) get_option( $this->option_name, [] );
+
+		$existing['api'] = $this->sanitize_api_settings( (array) ( $settings['api'] ?? [] ), (array) ( $existing['api'] ?? [] ) );
+		$existing['hooks'] = $this->sanitize_hooks_settings( (array) ( $settings['hooks'] ?? [] ) );
+
+		return $existing;
+	}
+
+	private function sanitize_api_settings( $settings, $existing = [] ) {
+		$existing['host'] = trim( (string) ( $settings['host'] ?? $existing['host'] ?? '' ) );
+		$existing['token'] = trim( (string) ( $settings['token'] ?? $existing['token'] ?? '' ) );
+		$existing['auth_header'] = trim( (string) ( $settings['auth_header'] ?? $existing['auth_header'] ?? '' ) );
+
+		return $existing;
+	}
+
+	private function sanitize_hooks_settings( $settings ) {
+		$customHooks = [];
+
+		foreach ( (array) ( $settings['custom'] ?? [] ) as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
+			$hook = trim( preg_replace( '/[^A-Za-z0-9_.:-]/', '', (string) ( $row['hook'] ?? '' ) ) );
+			$endpoints = array_filter( array_map( 'trim', explode( ',', (string) ( $row['endpoints'] ?? '' ) ) ) );
+			$endpoints = array_values( array_unique( array_map( function ( $endpoint ) {
+				return trim( (string) $endpoint, " \t\n\r\0\x0B/" );
+			}, $endpoints ) ) );
+
+			if ( '' === $hook || empty( $endpoints ) ) {
+				continue;
+			}
+
+			$customHooks[] = [
+				'hook'          => $hook,
+				'endpoints'     => $endpoints,
+				'priority'      => max( 1, (int) ( $row['priority'] ?? 10 ) ),
+				'accepted_args' => max( 0, (int) ( $row['accepted_args'] ?? 99 ) ),
+			];
+		}
+
+		return [
+			'custom' => $customHooks,
+		];
 	}
 }

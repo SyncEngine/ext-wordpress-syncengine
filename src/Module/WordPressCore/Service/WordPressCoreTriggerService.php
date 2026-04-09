@@ -17,6 +17,24 @@ class WordPressCoreTriggerService extends Singleton
 		add_action( 'user_register', [ $this, 'action_user_register' ], 20, 1 );
 		add_action( 'profile_update', [ $this, 'action_profile_update' ], 20, 2 );
 		add_action( 'deleted_user', [ $this, 'action_deleted_user' ], 20, 1 );
+
+		$this->registerCustomHooks();
+	}
+
+	private function registerCustomHooks() {
+		foreach ( PlatformService::get_instance()->getCustomHookDefinitions() as $definition ) {
+			$hook = (string) ( $definition['hook'] ?? '' );
+			if ( '' === $hook ) {
+				continue;
+			}
+
+			$priority = max( 1, (int) ( $definition['priority'] ?? 10 ) );
+			$acceptedArgs = max( 0, (int) ( $definition['accepted_args'] ?? 99 ) );
+
+			add_action( $hook, function () use ( $definition ) {
+				$this->dispatchCustomHook( $definition, func_get_args() );
+			}, $priority, $acceptedArgs );
+		}
 	}
 
 	public function action_wp_after_insert_post( $post_id, $post, $update, $post_before ) {
@@ -146,6 +164,31 @@ class WordPressCoreTriggerService extends Singleton
 		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_DELETED_USER, $payload );
 	}
 
+	private function dispatchCustomHook( $definition, $args ) {
+		$hook = (string) ( $definition['hook'] ?? current_filter() );
+		$normalizedArgs = $this->normalizeValue( array_values( (array) $args ) );
+
+		$payload = [
+			'event' => 'wp_custom_hook',
+			'data' => [
+				'hook' => $hook,
+				'args' => $normalizedArgs,
+			],
+			'request' => [
+				'hook' => $hook,
+				'args' => $normalizedArgs,
+				'arg_count' => count( $normalizedArgs ),
+			],
+		];
+
+		$payloadId = $this->resolvePayloadId( $args );
+		if ( null !== $payloadId ) {
+			$payload['id'] = $payloadId;
+		}
+
+		PlatformService::get_instance()->triggerCustomHook( $hook, $payload );
+	}
+
 	private function getPostData( $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post || ! is_object( $post ) ) {
@@ -188,5 +231,56 @@ class WordPressCoreTriggerService extends Singleton
 		$data['meta'] = get_user_meta( $user_id );
 
 		return $data;
+	}
+
+	private function resolvePayloadId( $args ) {
+		foreach ( (array) $args as $value ) {
+			if ( is_numeric( $value ) ) {
+				return (int) $value;
+			}
+
+			if ( is_object( $value ) ) {
+				foreach ( [ 'ID', 'id', 'term_id', 'comment_ID', 'user_id' ] as $property ) {
+					if ( isset( $value->{$property} ) && is_numeric( $value->{$property} ) ) {
+						return (int) $value->{$property};
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private function normalizeValue( $value, $depth = 0 ) {
+		if ( $depth >= 4 ) {
+			if ( is_scalar( $value ) || null === $value ) {
+				return $value;
+			}
+
+			return is_object( $value ) ? get_class( $value ) : gettype( $value );
+		}
+
+		if ( is_scalar( $value ) || null === $value ) {
+			return $value;
+		}
+
+		if ( is_array( $value ) ) {
+			$normalized = [];
+			foreach ( $value as $key => $item ) {
+				$normalized[ $key ] = $this->normalizeValue( $item, $depth + 1 );
+			}
+
+			return $normalized;
+		}
+
+		if ( is_object( $value ) ) {
+			if ( method_exists( $value, 'to_array' ) ) {
+				return $this->normalizeValue( $value->to_array(), $depth + 1 );
+			}
+
+			return $this->normalizeValue( get_object_vars( $value ), $depth + 1 );
+		}
+
+		return gettype( $value );
 	}
 }

@@ -3,6 +3,7 @@
 namespace SyncEngine\WordPress\Module\WordPressCore\Service;
 
 use SyncEngine\WordPress\Service\AbstractPlatformService;
+use SyncEngine\WordPress\Service\EndpointDispatcherService;
 use SyncEngine\WordPress\Service\ErrorNoticeService;
 
 class PlatformService extends AbstractPlatformService
@@ -19,6 +20,78 @@ class PlatformService extends AbstractPlatformService
 	const TRIGGER_NEW_USER = 'new_user';
 	const TRIGGER_UPDATED_USER = 'updated_user';
 	const TRIGGER_DELETED_USER = 'deleted_user';
+	const CUSTOM_TRIGGER_PREFIX = 'hook:';
+
+	/**
+	 * @return array<string, array<int, string>>
+	 */
+	public function getTriggerEndpointMap( $refresh = false ) {
+		$map = parent::getTriggerEndpointMap( $refresh );
+
+		foreach ( $this->getCustomHookDefinitions() as $definition ) {
+			$trigger = (string) ( $definition['trigger'] ?? '' );
+			if ( '' === $trigger ) {
+				continue;
+			}
+
+			$map[ $trigger ] = array_values(
+				array_unique(
+					array_merge(
+						(array) ( $map[ $trigger ] ?? [] ),
+						(array) ( $definition['endpoints'] ?? [] )
+					)
+				)
+			);
+		}
+
+		return $map;
+	}
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function getCustomHookDefinitions() {
+		$settings = (array) get_option( 'syncengine', [] );
+		$definitions = [];
+
+		foreach ( (array) ( $settings['hooks']['custom'] ?? [] ) as $definition ) {
+			if ( ! is_array( $definition ) ) {
+				continue;
+			}
+
+			$hook = trim( (string) ( $definition['hook'] ?? '' ) );
+			$endpoints = array_values( array_filter( array_map( 'strval', (array) ( $definition['endpoints'] ?? [] ) ) ) );
+
+			if ( '' === $hook || empty( $endpoints ) ) {
+				continue;
+			}
+
+			$definitions[] = [
+				'hook'          => $hook,
+				'trigger'       => $this->getCustomHookTrigger( $hook ),
+				'endpoints'     => $endpoints,
+				'priority'      => max( 1, (int) ( $definition['priority'] ?? 10 ) ),
+				'accepted_args' => max( 0, (int) ( $definition['accepted_args'] ?? 99 ) ),
+			];
+		}
+
+		return $definitions;
+	}
+
+	public function getCustomHookTrigger( $hook ) {
+		return self::CUSTOM_TRIGGER_PREFIX . trim( (string) $hook );
+	}
+
+	public function triggerCustomHook( $hook, $payload = [] ) {
+		return EndpointDispatcherService::get_instance()->triggerEndpoints(
+			$this->getEndpointsForTrigger( $this->getCustomHookTrigger( $hook ) ),
+			$payload,
+			[
+				'source'  => 'wordpress_custom_hook',
+				'trigger' => (string) $hook,
+			]
+		);
+	}
 
 	/**
 	 * @return array<int, string>
