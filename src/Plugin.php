@@ -20,10 +20,15 @@ class Plugin
 
 	protected function __construct() {
 		add_action( 'rest_api_init', array( $this, 'action_rest_api_init' ), 100000 );
+		add_action( 'plugins_loaded', array( $this, 'action_plugins_loaded' ), 20 );
 
 		if ( is_admin() ) {
 			AdminController::get_instance()->register();
 		}
+	}
+
+	public function action_plugins_loaded() {
+		\SyncEngine\WordPress\Module\WordPressCore\Plugin::get_instance()->register();
 	}
 
 	public function action_rest_api_init() {
