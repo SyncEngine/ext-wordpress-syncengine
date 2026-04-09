@@ -3,6 +3,7 @@
 namespace SyncEngine\WordPress\Controller;
 
 use SyncEngine\WordPress\Api\Client;
+use SyncEngine\WordPress\Service\SyncEngineErrorNoticeService;
 use SyncEngine\WordPress\Service\SyncEngineDispatchLogService;
 use SyncEngine\WordPress\Service\Singleton;
 
@@ -169,6 +170,11 @@ class AdminController extends Singleton
 		$status    = $api->status();
 		$endpoints = $api->listEndpoints();
 		$dispatchLog = SyncEngineDispatchLogService::get_instance()->getLatest( 25 );
+
+		if ( is_wp_error( $endpoints ) ) {
+			SyncEngineErrorNoticeService::get_instance()->addError( 'listEndpoints', $endpoints );
+			$endpoints = [];
+		}
 
 		$context->status = $status;
 		$context->endpoints = $endpoints;

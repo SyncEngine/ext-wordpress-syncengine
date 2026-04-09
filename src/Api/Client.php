@@ -87,7 +87,7 @@ class Client
 				$message .= ' "' . $body['message'] . '"';
 			}
 
-			return $code . ': ' . $message . ' (' . $url . ')';
+			return new \WP_Error( 'http_error', $code . ': ' . $message, [ 'url' => $url ] );
 		}
 
 		return json_decode( wp_remote_retrieve_body( $response ), true );
@@ -118,25 +118,29 @@ class Client
 		return 'online' === strtolower( (string) $this->status() );
 	}
 
+	public function isLocalhost() {		
+		return $this->localhost;
+	}
+
+	/**
+	 * @return array|\WP_Error
+	 */
 	public function listEndpoints() {
 		$cache = get_transient( 'syncengine_api_endpoints' );
-		if ( $cache ) {
+		if ( is_array( $cache ) ) {
 			return $cache;
 		}
 
 		$result = $this->request( 'endpoint', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
-			return $result->get_error_message();
-		}
-		if ( is_string( $result ) ) {
 			return $result;
 		}
 
-		if ( ! empty( $result ) ) {
+		if ( is_array( $result ) && ! empty( $result ) ) {
 			set_transient( 'syncengine_api_endpoints', $result );
 		}
 
-		return $result;
+		return $result ?? [];
 	}
 
 	public function executeEndpoint( $endpoint ) {
@@ -150,20 +154,26 @@ class Client
 		return $result;
 	}
 
+	/**
+	 * @return array|\WP_Error
+	 */
 	public function listAutomations() {
 		$result = $this->request( 'rest/v1/automation', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
-			return $result->get_error_message();
+			return $result;
 		}
-		return $result;
+		return $result ?? [];
 	}
 
+	/**
+	 * @return array|\WP_Error
+	 */
 	public function listConnections() {
 		$result = $this->request( 'rest/v1/connection', 'GET', [ 'version' => false ] );
 		if ( is_wp_error( $result ) ) {
-			return $result->get_error_message();
+			return $result;
 		}
-		return $result;
+		return $result ?? [];
 	}
 
 	public function triggerEndpoint( $endpoint, $payload = [] ) {
