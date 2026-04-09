@@ -54,7 +54,10 @@ class WordPressCoreTriggerService extends Singleton
 		];
 
 		$trigger = $update ? PlatformService::TRIGGER_UPDATED_POST : PlatformService::TRIGGER_NEW_POST;
-		PlatformService::get_instance()->triggerEndpoints( $trigger, $payload );
+		$this->dispatchKnownTrigger( $trigger, $payload, [
+			'hook' => 'wp_after_insert_post',
+			'args' => [ $post_id, $post, $update, $post_before ],
+		] );
 	}
 
 	public function action_before_delete_post( $post_id, $post ) {
@@ -70,7 +73,10 @@ class WordPressCoreTriggerService extends Singleton
 			'request' => [ 'id' => $post_id ],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_DELETED_POST, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_DELETED_POST, $payload, [
+			'hook' => 'before_delete_post',
+			'args' => [ $post_id, $post ],
+		] );
 	}
 
 	public function action_created_term( $term_id, $tt_id, $taxonomy, $args ) {
@@ -87,7 +93,10 @@ class WordPressCoreTriggerService extends Singleton
 			],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_NEW_TERM, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_NEW_TERM, $payload, [
+			'hook' => 'created_term',
+			'args' => [ $term_id, $tt_id, $taxonomy, $args ],
+		] );
 	}
 
 	public function action_edited_term( $term_id, $tt_id, $taxonomy, $args ) {
@@ -104,7 +113,10 @@ class WordPressCoreTriggerService extends Singleton
 			],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_UPDATED_TERM, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_UPDATED_TERM, $payload, [
+			'hook' => 'edited_term',
+			'args' => [ $term_id, $tt_id, $taxonomy, $args ],
+		] );
 	}
 
 	public function action_delete_term( $term, $tt_id, $taxonomy, $deleted_term, $object_ids ) {
@@ -122,7 +134,10 @@ class WordPressCoreTriggerService extends Singleton
 			],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_DELETED_TERM, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_DELETED_TERM, $payload, [
+			'hook' => 'delete_term',
+			'args' => [ $term, $tt_id, $taxonomy, $deleted_term, $object_ids ],
+		] );
 	}
 
 	public function action_user_register( $user_id ) {
@@ -134,7 +149,10 @@ class WordPressCoreTriggerService extends Singleton
 			'request' => [ 'id' => $user_id ],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_NEW_USER, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_NEW_USER, $payload, [
+			'hook' => 'user_register',
+			'args' => [ $user_id ],
+		] );
 	}
 
 	public function action_profile_update( $user_id, $old_user_data ) {
@@ -149,7 +167,10 @@ class WordPressCoreTriggerService extends Singleton
 			],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_UPDATED_USER, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_UPDATED_USER, $payload, [
+			'hook' => 'profile_update',
+			'args' => [ $user_id, $old_user_data ],
+		] );
 	}
 
 	public function action_deleted_user( $user_id ) {
@@ -161,7 +182,10 @@ class WordPressCoreTriggerService extends Singleton
 			'request' => [ 'id' => $user_id ],
 		];
 
-		PlatformService::get_instance()->triggerEndpoints( PlatformService::TRIGGER_DELETED_USER, $payload );
+		$this->dispatchKnownTrigger( PlatformService::TRIGGER_DELETED_USER, $payload, [
+			'hook' => 'deleted_user',
+			'args' => [ $user_id ],
+		] );
 	}
 
 	private function dispatchCustomHook( $definition, $args ) {
@@ -187,6 +211,13 @@ class WordPressCoreTriggerService extends Singleton
 		}
 
 		PlatformService::get_instance()->triggerCustomHook( $hook, $payload );
+	}
+
+	private function dispatchKnownTrigger( $trigger, $payload, $context = [] ) {
+		$trigger = (string) $trigger;
+		$context = (array) $context;
+
+		return PlatformService::get_instance()->triggerEndpoints( $trigger, $payload, $context );
 	}
 
 	private function getPostData( $post_id ) {

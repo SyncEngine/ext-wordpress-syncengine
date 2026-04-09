@@ -3,7 +3,6 @@
 namespace SyncEngine\WordPress\Module\WordPressCore\Service;
 
 use SyncEngine\WordPress\Service\AbstractPlatformService;
-use SyncEngine\WordPress\Service\EndpointDispatcherService;
 use SyncEngine\WordPress\Service\ErrorNoticeService;
 
 class PlatformService extends AbstractPlatformService
@@ -75,7 +74,8 @@ class PlatformService extends AbstractPlatformService
 			];
 		}
 
-		return $definitions;
+		$definitions = apply_filters( 'syncengine_wp_custom_hook_definitions', $definitions, $settings );
+		return is_array( $definitions ) ? $definitions : [];
 	}
 
 	public function getCustomHookTrigger( $hook ) {
@@ -83,12 +83,12 @@ class PlatformService extends AbstractPlatformService
 	}
 
 	public function triggerCustomHook( $hook, $payload = [] ) {
-		return EndpointDispatcherService::get_instance()->triggerEndpoints(
-			$this->getEndpointsForTrigger( $this->getCustomHookTrigger( $hook ) ),
+		return $this->triggerEndpoints(
+			$this->getCustomHookTrigger( $hook ),
 			$payload,
 			[
-				'source'  => 'wordpress_custom_hook',
-				'trigger' => (string) $hook,
+				'hook' => (string) $hook,
+				'kind' => 'custom_hook',
 			]
 		);
 	}

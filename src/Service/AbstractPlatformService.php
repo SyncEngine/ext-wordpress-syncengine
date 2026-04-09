@@ -4,6 +4,8 @@ namespace SyncEngine\WordPress\Service;
 
 abstract class AbstractPlatformService extends Singleton
 {
+	use FilterTagTrait;
+
 	/**
 	 * @return array<string, array<int, string>>
 	 */
@@ -83,17 +85,63 @@ abstract class AbstractPlatformService extends Singleton
 		return (array) ( $map[ $trigger ] ?? [] );
 	}
 
-	public function triggerEndpoints( $trigger, $payload = [] ) {
-		$endpoints = $this->getEndpointsForTrigger( $trigger );
+	public function triggerEndpoints( $trigger, $payload = [], $context = [] ) {
+		$trigger = (string) $trigger;
+		$context = (array) $context;
+		$sourceTag = $this->normalizeFilterTag( $this->getSource() );
+		$triggerTag = $this->normalizeFilterTag( $trigger );
 
-		return EndpointDispatcherService::get_instance()->triggerEndpoints(
+		$meta = [
+			'source'  => $this->getSource(),
+			'trigger' => $trigger,
+			'context' => $context,
+		];
+
+		$payload = apply_filters( 'syncengine_trigger_payload', (array) $payload, $meta );
+		if ( '' !== $sourceTag ) {
+			$payload = apply_filters( 'syncengine_trigger_payload_' . $sourceTag, (array) $payload, $meta );
+		}
+		if ( '' !== $triggerTag ) {
+			$payload = apply_filters( 'syncengine_trigger_payload_' . $triggerTag, (array) $payload, $meta );
+		}
+		if ( '' !== $sourceTag && '' !== $triggerTag ) {
+			$payload = apply_filters( 'syncengine_trigger_payload_' . $sourceTag . '_' . $triggerTag, (array) $payload, $meta );
+		}
+
+		$shouldDispatch = apply_filters( 'syncengine_trigger_should_dispatch', true, $meta, (array) $payload );
+		if ( '' !== $sourceTag ) {
+			$shouldDispatch = apply_filters( 'syncengine_trigger_should_dispatch_' . $sourceTag, (bool) $shouldDispatch, $meta, (array) $payload );
+		}
+		if ( '' !== $triggerTag ) {
+			$shouldDispatch = apply_filters( 'syncengine_trigger_should_dispatch_' . $triggerTag, (bool) $shouldDispatch, $meta, (array) $payload );
+		}
+		if ( '' !== $sourceTag && '' !== $triggerTag ) {
+			$shouldDispatch = apply_filters( 'syncengine_trigger_should_dispatch_' . $sourceTag . '_' . $triggerTag, (bool) $shouldDispatch, $meta, (array) $payload );
+		}
+
+		if ( ! $shouldDispatch ) {
+			return [];
+		}
+
+		$endpoints = $this->getEndpointsForTrigger( $trigger );
+		$results = EndpointDispatcherService::get_instance()->triggerEndpoints(
 			$endpoints,
 			$payload,
-			[
-				'source'  => $this->getSource(),
-				'trigger' => (string) $trigger,
-			]
+			$meta
 		);
+
+		do_action( 'syncengine_trigger_dispatched', $results, $meta, (array) $payload );
+		if ( '' !== $sourceTag ) {
+			do_action( 'syncengine_trigger_dispatched_' . $sourceTag, $results, $meta, (array) $payload );
+		}
+		if ( '' !== $triggerTag ) {
+			do_action( 'syncengine_trigger_dispatched_' . $triggerTag, $results, $meta, (array) $payload );
+		}
+		if ( '' !== $sourceTag && '' !== $triggerTag ) {
+			do_action( 'syncengine_trigger_dispatched_' . $sourceTag . '_' . $triggerTag, $results, $meta, (array) $payload );
+		}
+
+		return $results;
 	}
 
 	public function clearTriggerEndpointMapCache() {
