@@ -149,4 +149,44 @@ class Client
 		}
 		return $result;
 	}
+
+	public function listAutomations() {
+		$result = $this->request( 'rest/v1/automation', 'GET', [ 'version' => false ] );
+		if ( is_wp_error( $result ) ) {
+			return $result->get_error_message();
+		}
+		return $result;
+	}
+
+	public function listConnections() {
+		$result = $this->request( 'rest/v1/connection', 'GET', [ 'version' => false ] );
+		if ( is_wp_error( $result ) ) {
+			return $result->get_error_message();
+		}
+		return $result;
+	}
+
+	public function triggerEndpoint( $endpoint, $payload = [] ) {
+		$result = $this->request(
+			'endpoint/' . $endpoint . '/execute',
+			'POST',
+			[
+				'version' => false,
+				'body'    => wp_json_encode( $payload ),
+				'headers' => [
+					'Content-Type' => 'application/json',
+				],
+			]
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return [ 'success' => false, 'error' => $result->get_error_message() ];
+		}
+
+		if ( is_string( $result ) ) {
+			return [ 'success' => false, 'error' => $result ];
+		}
+
+		return $result;
+	}
 }

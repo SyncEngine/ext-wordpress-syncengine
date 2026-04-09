@@ -3,6 +3,7 @@
 namespace SyncEngine\WordPress\Controller;
 
 use SyncEngine\WordPress\Api\Client;
+use SyncEngine\WordPress\Service\SyncEngineDispatchLogService;
 use SyncEngine\WordPress\Service\Singleton;
 
 class AdminController extends Singleton
@@ -126,6 +127,7 @@ class AdminController extends Singleton
 
 	public function page() {
 		$settings = get_option( $this->option_name );
+		$result = null;
 
 		$url = remove_query_arg( 'settings-updated' );
 
@@ -147,8 +149,31 @@ class AdminController extends Singleton
 			$url = remove_query_arg( 'execute_endpoint', $url );
 		}
 
+		if ( ! empty( $_GET['clear_dispatch_log'] ) ) {
+			SyncEngineDispatchLogService::get_instance()->clearLog();
+			$url = remove_query_arg( 'clear_dispatch_log', $url );
+		}
+
+		$context = (object) [
+			'api'      => $api,
+			'url'      => $url,
+			'settings' => (array) $settings,
+			'result'   => $result,
+		];
+
+		do_action( 'syncengine_admin_process_actions', $context );
+
+		$url = (string) ( $context->url ?? $url );
+		$result = $context->result ?? $result;
+
 		$status    = $api->status();
 		$endpoints = $api->listEndpoints();
+		$dispatchLog = SyncEngineDispatchLogService::get_instance()->getLatest( 25 );
+
+		$context->status = $status;
+		$context->endpoints = $endpoints;
+		$context->url = $url;
+		$context->result = $result;
 
 		?>
 		<div class="wrap">
@@ -184,6 +209,51 @@ class AdminController extends Singleton
 				</div>
 			</div>
 			<?php endif; ?>
+
+			<div style="margin-top: 2em;">
+				<h2><?= __( 'Trigger Debug', 'syncengine' ) ?></h2>
+				<p>
+					<a class="button" href="<?= add_query_arg( 'clear_dispatch_log', true, $url ) ?>"><?= __( 'Clear dispatch log', 'syncengine' ) ?></a>
+				</p>
+
+				<div class="code" style="background: #fff; padding: 1em; margin-bottom: 1em;">
+					<h3 style="margin-top: 0;"><?= __( 'Recent Dispatches (latest 25)', 'syncengine' ) ?></h3>
+					<?php if ( ! empty( $dispatchLog ) ): ?>
+					<table class="widefat striped" style="margin-top: .5em;">
+						<thead>
+							<tr>
+								<th><?= __( 'Time', 'syncengine' ) ?></th>
+								<th><?= __( 'Source', 'syncengine' ) ?></th>
+								<th><?= __( 'Trigger', 'syncengine' ) ?></th>
+								<th><?= __( 'Endpoint', 'syncengine' ) ?></th>
+								<th><?= __( 'Success', 'syncengine' ) ?></th>
+								<th><?= __( 'Payload Size', 'syncengine' ) ?></th>
+								<th><?= __( 'Error', 'syncengine' ) ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $dispatchLog as $entry ): ?>
+							<tr>
+								<td><?= date_i18n( 'Y-m-d H:i:s', (int) ( $entry['timestamp'] ?? 0 ) ) ?></td>
+								<td><?= esc_html( (string) ( $entry['source'] ?? '' ) ) ?></td>
+								<td><?= esc_html( (string) ( $entry['trigger'] ?? '' ) ) ?></td>
+								<td><?= esc_html( (string) ( $entry['endpoint'] ?? '' ) ) ?></td>
+								<td><?= ! empty( $entry['success'] ) ? 'yes' : 'no' ?></td>
+								<td><?= (int) ( $entry['payload_size'] ?? 0 ) ?></td>
+								<td><?= esc_html( (string) ( $entry['error'] ?? '' ) ) ?></td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+					<?php else: ?>
+					<p><?= __( 'No dispatch log entries yet.', 'syncengine' ) ?></p>
+					<?php endif; ?>
+				</div>
+
+				<?php do_action( 'syncengine_admin_render_trigger_debug_sections', $context ); ?>
+			</div>
+
+			<?php do_action( 'syncengine_admin_render_sections', $context ); ?>
 		</div>
 		<?php
 	}
