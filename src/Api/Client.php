@@ -45,16 +45,13 @@ class Client
 
 		$options['method'] = $method;
 
+		$headers = (array) ( $options['headers'] ?? [] );
 		if ( empty( $options['auth_header'] ) ) {
-			$options['headers'] = [
-				'Authorization' => 'Bearer ' . $this->token,
-			];
+			$headers['Authorization'] = 'Bearer ' . $this->token;
+		} else {
+			$headers[ $options['auth_header'] ] = $this->token;
 		}
-		else {
-			$options['headers'] = [
-				$options['auth_header'] => $this->token,
-			];
-		}
+		$options['headers'] = $headers;
 		unset( $options['auth_header'] );
 
 		$url = $this->root;
@@ -119,7 +116,7 @@ class Client
 		return 'online' === strtolower( (string) $this->status() );
 	}
 
-	public function isLocalhost() {		
+	public function isLocalhost() {
 		return $this->localhost;
 	}
 
