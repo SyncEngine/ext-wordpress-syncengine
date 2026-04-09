@@ -20,6 +20,7 @@ class Client
 
 		$localhosts = [
 			'localhost',
+			'host.docker.internal',
 			'127.0.0.1',
 			'::1',
 		];
