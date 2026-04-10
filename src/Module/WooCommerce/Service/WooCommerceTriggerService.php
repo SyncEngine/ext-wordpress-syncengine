@@ -284,136 +284,25 @@ class WooCommerceTriggerService extends Singleton
 
 	private function getQueuedData( string $trigger, int $id ): array
 	{
+		$svc = WooCommerceRestPayloadService::get_instance();
+
 		return match ( $trigger ) {
-			PlatformService::TRIGGER_NEW_CUSTOMER => [
-				'id'   => $id,
-				'user' => $this->getWpUserData( $id ),
-			],
+			PlatformService::TRIGGER_NEW_CUSTOMER,
 			PlatformService::TRIGGER_UPDATED_CUSTOMER,
-			PlatformService::TRIGGER_DELETED_CUSTOMER => [
-				'id'   => $id,
-				'user' => $this->getWpUserData( $id ),
-			],
+			PlatformService::TRIGGER_DELETED_CUSTOMER => $svc->getCustomerData( $id ),
 			PlatformService::TRIGGER_NEW_ORDER,
 			PlatformService::TRIGGER_UPDATED_ORDER,
-			PlatformService::TRIGGER_DELETED_ORDER => $this->getOrderData( $id ),
+			PlatformService::TRIGGER_DELETED_ORDER => $svc->getOrderData( $id ),
 			PlatformService::TRIGGER_NEW_PRODUCT,
 			PlatformService::TRIGGER_UPDATED_PRODUCT,
-			PlatformService::TRIGGER_DELETED_PRODUCT => $this->getProductData( $id ),
+			PlatformService::TRIGGER_DELETED_PRODUCT => $svc->getProductData( $id ),
 			PlatformService::TRIGGER_NEW_COUPON,
 			PlatformService::TRIGGER_UPDATED_COUPON,
-			PlatformService::TRIGGER_DELETED_COUPON => $this->getCouponData( $id ),
+			PlatformService::TRIGGER_DELETED_COUPON => $svc->getCouponData( $id ),
 			PlatformService::TRIGGER_NEW_PRODUCT_VARIATION,
 			PlatformService::TRIGGER_UPDATED_PRODUCT_VARIATION,
-			PlatformService::TRIGGER_DELETED_PRODUCT_VARIATION => $this->getProductVariationData( $id ),
+			PlatformService::TRIGGER_DELETED_PRODUCT_VARIATION => $svc->getProductVariationData( $id ),
 			default => [ 'id' => $id ],
 		};
-	}
-
-	private function getCouponData( $coupon_id ) {
-		if ( ! class_exists( 'WC_Coupon' ) ) {
-			return [ 'id' => (int) $coupon_id ];
-		}
-
-		$coupon = new \WC_Coupon( $coupon_id );
-		if ( ! $coupon || ! method_exists( $coupon, 'get_data' ) ) {
-			return [ 'id' => (int) $coupon_id ];
-		}
-
-		return $coupon->get_data();
-	}
-
-	private function getProductVariationData( $variation_id ) {
-		if ( ! function_exists( 'wc_get_product' ) ) {
-			return [ 'id' => (int) $variation_id ];
-		}
-
-		$variation = wc_get_product( $variation_id );
-		if ( ! $variation || ! is_object( $variation ) || ! method_exists( $variation, 'get_data' ) ) {
-			return [ 'id' => (int) $variation_id ];
-		}
-
-		$data = $variation->get_data();
-		if ( method_exists( $variation, 'get_parent_id' ) ) {
-			$data['product_id'] = (int) $variation->get_parent_id();
-		}
-
-		return $data;
-	}
-
-	private function getOrderData( $order_id, $order = null ) {
-		if ( ! $order && function_exists( 'wc_get_order' ) ) {
-			$order = wc_get_order( $order_id );
-		}
-
-		if ( ! $order || ! is_object( $order ) || ! method_exists( $order, 'get_data' ) ) {
-			return [ 'id' => $order_id ];
-		}
-
-		$data = $order->get_data();
-
-		if ( method_exists( $order, 'get_items' ) ) {
-			$data['line_items'] = array_values( array_map( function ( $item ) {
-				return method_exists( $item, 'get_data' ) ? $item->get_data() : [];
-			}, $order->get_items() ) );
-		}
-
-		if ( method_exists( $order, 'get_shipping_methods' ) ) {
-			$data['shipping_lines'] = array_values( array_map( function ( $item ) {
-				return method_exists( $item, 'get_data' ) ? $item->get_data() : [];
-			}, $order->get_shipping_methods() ) );
-		}
-
-		if ( method_exists( $order, 'get_fee_lines' ) ) {
-			$data['fee_lines'] = array_values( array_map( function ( $item ) {
-				return method_exists( $item, 'get_data' ) ? $item->get_data() : [];
-			}, $order->get_fee_lines() ) );
-		}
-
-		if ( method_exists( $order, 'get_coupon_codes' ) ) {
-			$data['coupon_codes'] = $order->get_coupon_codes();
-		}
-
-		return $data;
-	}
-
-	private function getProductData( $product_id ) {
-		if ( ! function_exists( 'wc_get_product' ) ) {
-			return [ 'id' => $product_id ];
-		}
-
-		$product = wc_get_product( $product_id );
-		if ( ! $product || ! method_exists( $product, 'get_data' ) ) {
-			return [ 'id' => $product_id ];
-		}
-
-		$data = $product->get_data();
-
-		if ( method_exists( $product, 'get_attributes' ) ) {
-			$attributes = [];
-			foreach ( $product->get_attributes() as $attribute ) {
-				$attributes[] = method_exists( $attribute, 'get_data' ) ? $attribute->get_data() : [];
-			}
-
-			$data['attributes'] = $attributes;
-		}
-
-		return $data;
-	}
-
-	private function getWpUserData( $user_id ) {
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return [ 'id' => (int) $user_id ];
-		}
-
-		return [
-			'id'           => (int) $user->ID,
-			'user_login'   => (string) $user->user_login,
-			'user_email'   => (string) $user->user_email,
-			'display_name' => (string) $user->display_name,
-			'user_nicename'=> (string) $user->user_nicename,
-			'roles'        => array_values( (array) $user->roles ),
-		];
 	}
 }
