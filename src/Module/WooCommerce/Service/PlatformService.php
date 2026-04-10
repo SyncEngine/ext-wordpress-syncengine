@@ -10,9 +10,20 @@ class PlatformService extends AbstractPlatformService
 	const TRANSIENT_TRIGGER_ENDPOINT_MAP = 'syncengine_wc_trigger_endpoint_map';
 	const WC_WEBSERVICE_CLASS = 'SyncEngine/WooCommerceRestV3:WooCommerceRestV3';
 	const TRIGGER_NEW_CUSTOMER = 'new_customer';
+	const TRIGGER_UPDATED_CUSTOMER = 'updated_customer';
+	const TRIGGER_DELETED_CUSTOMER = 'deleted_customer';
 	const TRIGGER_NEW_ORDER = 'new_order';
 	const TRIGGER_UPDATED_ORDER = 'updated_order';
+	const TRIGGER_DELETED_ORDER = 'deleted_order';
+	const TRIGGER_NEW_PRODUCT = 'new_product';
 	const TRIGGER_UPDATED_PRODUCT = 'updated_product';
+	const TRIGGER_DELETED_PRODUCT = 'deleted_product';
+	const TRIGGER_NEW_COUPON = 'new_coupon';
+	const TRIGGER_UPDATED_COUPON = 'updated_coupon';
+	const TRIGGER_DELETED_COUPON = 'deleted_coupon';
+	const TRIGGER_NEW_PRODUCT_VARIATION = 'new_product_variation';
+	const TRIGGER_UPDATED_PRODUCT_VARIATION = 'updated_product_variation';
+	const TRIGGER_DELETED_PRODUCT_VARIATION = 'deleted_product_variation';
 
 	/**
 	 * @return array<int, string>
@@ -20,9 +31,20 @@ class PlatformService extends AbstractPlatformService
 	protected function getTriggerEvents() {
 		return [
 			self::TRIGGER_NEW_CUSTOMER,
+			self::TRIGGER_UPDATED_CUSTOMER,
+			self::TRIGGER_DELETED_CUSTOMER,
 			self::TRIGGER_NEW_ORDER,
 			self::TRIGGER_UPDATED_ORDER,
+			self::TRIGGER_DELETED_ORDER,
+			self::TRIGGER_NEW_PRODUCT,
 			self::TRIGGER_UPDATED_PRODUCT,
+			self::TRIGGER_DELETED_PRODUCT,
+			self::TRIGGER_NEW_COUPON,
+			self::TRIGGER_UPDATED_COUPON,
+			self::TRIGGER_DELETED_COUPON,
+			self::TRIGGER_NEW_PRODUCT_VARIATION,
+			self::TRIGGER_UPDATED_PRODUCT_VARIATION,
+			self::TRIGGER_DELETED_PRODUCT_VARIATION,
 		];
 	}
 
@@ -32,9 +54,20 @@ class PlatformService extends AbstractPlatformService
 	protected function getBlueprintClassMap() {
 		return [
 			'SyncEngine/WooCommerceRestV3:NewCustomer'    => self::TRIGGER_NEW_CUSTOMER,
+			'SyncEngine/WooCommerceRestV3:UpdatedCustomer' => self::TRIGGER_UPDATED_CUSTOMER,
+			'SyncEngine/WooCommerceRestV3:DeletedCustomer' => self::TRIGGER_DELETED_CUSTOMER,
 			'SyncEngine/WooCommerceRestV3:NewOrder'       => self::TRIGGER_NEW_ORDER,
 			'SyncEngine/WooCommerceRestV3:UpdatedOrder'   => self::TRIGGER_UPDATED_ORDER,
+			'SyncEngine/WooCommerceRestV3:DeletedOrder'   => self::TRIGGER_DELETED_ORDER,
+			'SyncEngine/WooCommerceRestV3:NewProduct'     => self::TRIGGER_NEW_PRODUCT,
 			'SyncEngine/WooCommerceRestV3:UpdatedProduct' => self::TRIGGER_UPDATED_PRODUCT,
+			'SyncEngine/WooCommerceRestV3:DeletedProduct' => self::TRIGGER_DELETED_PRODUCT,
+			'SyncEngine/WooCommerceRestV3:NewCoupon'      => self::TRIGGER_NEW_COUPON,
+			'SyncEngine/WooCommerceRestV3:UpdatedCoupon'  => self::TRIGGER_UPDATED_COUPON,
+			'SyncEngine/WooCommerceRestV3:DeletedCoupon'  => self::TRIGGER_DELETED_COUPON,
+			'SyncEngine/WooCommerceRestV3:NewProductVariation' => self::TRIGGER_NEW_PRODUCT_VARIATION,
+			'SyncEngine/WooCommerceRestV3:UpdatedProductVariation' => self::TRIGGER_UPDATED_PRODUCT_VARIATION,
+			'SyncEngine/WooCommerceRestV3:DeletedProductVariation' => self::TRIGGER_DELETED_PRODUCT_VARIATION,
 		];
 	}
 
