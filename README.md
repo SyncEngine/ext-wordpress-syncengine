@@ -9,6 +9,7 @@ WordPress plugin that enhances and extends the integration between WordPress and
 - **Custom hook mappings** — map any WordPress action hook to one or more SyncEngine automation endpoints via the admin UI
 - **Auto-refresh** — the trigger endpoint map is automatically refreshed when a WordPress connection is tested or a related automation is saved in SyncEngine
 - **Developer extension points** — code-level filters for modifying payloads, blocking dispatches, and reacting to results
+- **WooCommerce support** (optional) — triggers automations on WooCommerce events (customers, orders, products, product variations, coupons) when WooCommerce is active
 
 ---
 
@@ -215,3 +216,32 @@ The `source` value in `$meta` identifies which module fired the trigger:
 | Source | Module |
 |---|---|
 | `wordpress_core` | WordPress Core (posts, terms, users, custom hooks) |
+| `woocommerce` | WooCommerce (orders, customers, products) |
+
+---
+
+## WooCommerce
+
+When WooCommerce is active, the plugin registers additional triggers for all major WooCommerce object types.
+
+### Supported Events
+
+| Object | Event | SyncEngine blueprint class |
+|---|---|---|
+| Customer | New | `SyncEngine/WooCommerceRestV3:NewCustomer` |
+| Customer | Updated | `SyncEngine/WooCommerceRestV3:UpdatedCustomer` |
+| Customer | Deleted | `SyncEngine/WooCommerceRestV3:DeletedCustomer` |
+| Order | New | `SyncEngine/WooCommerceRestV3:NewOrder` |
+| Order | Updated | `SyncEngine/WooCommerceRestV3:UpdatedOrder` |
+| Order | Deleted | `SyncEngine/WooCommerceRestV3:DeletedOrder` |
+| Product | New | `SyncEngine/WooCommerceRestV3:NewProduct` |
+| Product | Updated | `SyncEngine/WooCommerceRestV3:UpdatedProduct` |
+| Product | Deleted | `SyncEngine/WooCommerceRestV3:DeletedProduct` |
+| Product variation | New | `SyncEngine/WooCommerceRestV3:NewProductVariation` |
+| Product variation | Updated | `SyncEngine/WooCommerceRestV3:UpdatedProductVariation` |
+| Product variation | Deleted | `SyncEngine/WooCommerceRestV3:DeletedProductVariation` |
+| Coupon | New | `SyncEngine/WooCommerceRestV3:NewCoupon` |
+| Coupon | Updated | `SyncEngine/WooCommerceRestV3:UpdatedCoupon` |
+| Coupon | Deleted | `SyncEngine/WooCommerceRestV3:DeletedCoupon` |
+
+Payloads match the WooCommerce REST API response shape (`GET /wp-json/wc/v3/{resource}/{id}` with `context=edit`).
