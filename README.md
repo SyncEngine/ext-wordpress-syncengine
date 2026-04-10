@@ -140,9 +140,28 @@ The plugin registers the following endpoints under the `syncengine/v1` namespace
 | Method | Route | Auth | Description |
 |---|---|---|---|
 | `GET` | `/wp-json/syncengine/v1/status` | None | Returns plugin status (`active`) |
-| `POST` | `/wp-json/syncengine/v1/refresh` | None | Clears the trigger endpoint map cache. Throttled to once per 30 seconds. |
+| `POST` | `/wp-json/syncengine/v1/refresh` | None | Clears the trigger endpoint map cache. Throttled (see below). |
 
 The `/refresh` endpoint is called automatically by SyncEngine when a related connection or automation is saved. It is intentionally unauthenticated — the only effect is clearing internal transient cache, which causes a fresh lookup the next time a WordPress event fires. Installing the plugin is optional; if not present, SyncEngine falls back to the existing cache timeout.
+
+#### Refresh throttling
+
+Requests are bucketed by whether SyncEngine can identify itself as a known trusted connection:
+
+| Request type | Throttle window | Transient key |
+|---|---|---|
+| Anonymous / unrecognised | 5 seconds | `syncengine_refresh_throttle` |
+| Trusted (known connection ref) | 1 second | `syncengine_refresh_throttle_trusted` |
+
+SyncEngine sends its connection ref in the `X-SyncEngine-Connection` request header. The plugin verifies the value against the set of known connection refs it captured the last time the trigger endpoint map was built. Both windows are filterable:
+
+```php
+// Change the anonymous throttle window (seconds)
+add_filter( 'syncengine_refresh_throttle_ttl', fn() => 10 );
+
+// Change the trusted throttle window (seconds)
+add_filter( 'syncengine_refresh_trusted_throttle_ttl', fn() => 2 );
+```
 
 ### Enhanced REST API Query Params
 
