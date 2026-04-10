@@ -46,7 +46,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $post_id,
 			'event' => $update ? 'wp_updated_post' : 'wp_new_post',
-			'data' => is_object( $post ) && method_exists( $post, 'to_array' ) ? $post->to_array() : $this->getPostData( $post_id ),
+			'data' => $this->getPayloadDataService()->getPostData( $post_id, $post ),
 			'request' => [
 				'id' => $post_id,
 				'update' => (bool) $update,
@@ -69,7 +69,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $post_id,
 			'event' => 'wp_deleted_post',
-			'data' => is_object( $post ) && method_exists( $post, 'to_array' ) ? $post->to_array() : [ 'id' => $post_id ],
+			'data' => $this->getPayloadDataService()->getPostData( $post_id, $post ),
 			'request' => [ 'id' => $post_id ],
 		];
 
@@ -84,7 +84,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $term_id,
 			'event' => 'wp_new_term',
-			'data' => $this->getTermData( $term_id, (string) $taxonomy ),
+			'data' => $this->getPayloadDataService()->getTermData( $term_id, (string) $taxonomy ),
 			'request' => [
 				'id' => $term_id,
 				'tt_id' => (int) $tt_id,
@@ -104,7 +104,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $term_id,
 			'event' => 'wp_updated_term',
-			'data' => $this->getTermData( $term_id, (string) $taxonomy ),
+			'data' => $this->getPayloadDataService()->getTermData( $term_id, (string) $taxonomy ),
 			'request' => [
 				'id' => $term_id,
 				'tt_id' => (int) $tt_id,
@@ -145,7 +145,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $user_id,
 			'event' => 'wp_new_user',
-			'data' => $this->getUserData( $user_id ),
+			'data' => $this->getPayloadDataService()->getUserData( $user_id ),
 			'request' => [ 'id' => $user_id ],
 		];
 
@@ -160,7 +160,7 @@ class WordPressCoreTriggerService extends Singleton
 		$payload = [
 			'id' => $user_id,
 			'event' => 'wp_updated_user',
-			'data' => $this->getUserData( $user_id ),
+			'data' => $this->getPayloadDataService()->getUserData( $user_id ),
 			'request' => [
 				'id' => $user_id,
 				'old_user_data' => is_object( $old_user_data ) ? (array) $old_user_data : [],
@@ -220,48 +220,8 @@ class WordPressCoreTriggerService extends Singleton
 		return PlatformService::get_instance()->triggerEndpoints( $trigger, $payload, $context );
 	}
 
-	private function getPostData( $post_id ) {
-		$post = get_post( $post_id );
-		if ( ! $post || ! is_object( $post ) ) {
-			return [ 'id' => (int) $post_id ];
-		}
-
-		$data = (array) $post;
-		$data['meta'] = get_post_meta( $post_id );
-
-		return $data;
-	}
-
-	private function getTermData( $term_id, $taxonomy = '' ) {
-		$term = get_term( $term_id, $taxonomy ?: '' );
-		if ( ! $term || is_wp_error( $term ) ) {
-			return [ 'id' => (int) $term_id, 'taxonomy' => (string) $taxonomy ];
-		}
-
-		$data = (array) $term;
-		$data['meta'] = get_term_meta( $term_id );
-
-		return $data;
-	}
-
-	private function getUserData( $user_id ) {
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return [ 'id' => (int) $user_id ];
-		}
-
-		$data = [
-			'id'           => (int) $user->ID,
-			'user_login'   => (string) $user->user_login,
-			'user_email'   => (string) $user->user_email,
-			'display_name' => (string) $user->display_name,
-			'user_nicename'=> (string) $user->user_nicename,
-			'roles'        => array_values( (array) $user->roles ),
-		];
-
-		$data['meta'] = get_user_meta( $user_id );
-
-		return $data;
+	private function getPayloadDataService() {
+		return WordPressCoreRestPayloadService::get_instance();
 	}
 
 	private function resolvePayloadId( $args ) {
