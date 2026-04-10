@@ -36,7 +36,38 @@ class WooCommerceTriggerService extends Singleton
 		add_action( 'woocommerce_update_product_variation', [ $this, 'action_woocommerce_update_product_variation' ], 20, 1 );
 		add_action( 'woocommerce_before_delete_product_variation', [ $this, 'action_woocommerce_before_delete_product_variation' ], 20, 1 );
 
+		// Fallback for stores where WC-specific before_delete hooks are absent (e.g. legacy
+		// order storage) or skipped by third-party plugins. Runs at priority 5 so WC-specific
+		// hooks at priority 20 still win; the shared queue deduplicates if both fire.
+		add_action( 'before_delete_post', [ $this, 'action_before_delete_post_fallback' ], 5, 1 );
+
 		add_action( 'shutdown', [ $this, 'action_shutdown_dispatch_queued_triggers' ], 999 );
+	}
+
+	public function action_before_delete_post_fallback( $post_id ) {
+		// Skip revisions and autosaves — they share the same hook but are never Woo objects.
+		if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		switch ( get_post_type( $post_id ) ) {
+			case 'product':
+				// Fires only when woocommerce_before_delete_product has NOT already queued
+				// this id (non-HPOS stores without the WC hook). Dedup happens in queueTrigger.
+				$this->action_woocommerce_before_delete_product( $post_id );
+				break;
+			case 'product_variation':
+				$this->action_woocommerce_before_delete_product_variation( $post_id );
+				break;
+			case 'shop_coupon':
+				$this->action_woocommerce_before_delete_coupon( $post_id );
+				break;
+			case 'shop_order':
+				// Legacy (non-HPOS) order storage: woocommerce_before_delete_order does not
+				// fire, so this is the only hook we get. HPOS orders never reach here.
+				$this->action_woocommerce_before_delete_order( $post_id );
+				break;
+		}
 	}
 
 	public function action_woocommerce_created_customer( $customer_id, $new_customer_data = [], $password_generated = false ) {
