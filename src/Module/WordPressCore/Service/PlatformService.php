@@ -4,6 +4,7 @@ namespace SyncEngine\WordPress\Module\WordPressCore\Service;
 
 use SyncEngine\WordPress\Service\AbstractPlatformService;
 use SyncEngine\WordPress\Service\ErrorNoticeService;
+use SyncEngine\WordPress\Service\RefreshTrustService;
 
 class PlatformService extends AbstractPlatformService
 {
@@ -146,6 +147,7 @@ class PlatformService extends AbstractPlatformService
 		}
 
 		$ids = [];
+		$refs = [];
 		foreach ( $connections as $connection ) {
 			if ( ! is_array( $connection ) ) {
 				continue;
@@ -163,8 +165,14 @@ class PlatformService extends AbstractPlatformService
 			$host = $this->normalizeSiteHost( (string) ( $webservice['host'] ?? '' ) );
 			if ( $id && $host && in_array( $host, $localHosts, true ) ) {
 				$ids[] = $id;
+				$ref = trim( (string) ( $connection['ref'] ?? '' ) );
+				if ( '' !== $ref ) {
+					$refs[] = $ref;
+				}
 			}
 		}
+
+		RefreshTrustService::get_instance()->rememberConnectionRefs( $refs );
 
 		return array_values( array_unique( $ids ) );
 	}
