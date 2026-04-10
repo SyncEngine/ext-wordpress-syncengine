@@ -18,7 +18,7 @@ WordPress plugin that enhances and extends the integration between WordPress and
 - WordPress 6.0+
 - An active and reachable [SyncEngine](https://syncengine.io) installation
 - A SyncEngine API token with at least read access to automations and connections
-- For automated mapping of event triggers to endpoints you need the WordPress REST v2 module installed.
+- For common blueprints and automated mapping of event triggers to such endpoints you'll need the corresponding modules installed. [Please check our marketplace](https://marketplace.syncengine.io/)
 
 ---
 
