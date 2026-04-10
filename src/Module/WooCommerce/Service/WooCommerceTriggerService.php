@@ -88,7 +88,10 @@ class WooCommerceTriggerService extends Singleton
 				'id'      => $id,
 				'event'   => $event,
 				'data'    => $this->getQueuedData( $trigger, $id ),
-				'request' => $request,
+				'request' => array_merge( $request, [
+					'queued' => true,
+					'flush_hook' => 'shutdown',
+				] ),
 			];
 
 			PlatformService::get_instance()->triggerEndpoints( $trigger, $payload );
