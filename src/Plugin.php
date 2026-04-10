@@ -29,6 +29,7 @@ class Plugin
 
 	public function action_plugins_loaded() {
 		\SyncEngine\WordPress\Module\WordPressCore\Plugin::get_instance()->register();
+		\SyncEngine\WordPress\Module\WooCommerce\Plugin::get_instance()->register();
 	}
 
 	public function action_rest_api_init() {
