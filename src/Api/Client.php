@@ -9,6 +9,13 @@ class Client
 	private $options;
 	private $root;
 	private $localhost = false;
+	private const LOCAL_DEV_HOSTS = [
+		'localhost',
+		'host.docker.internal',
+		'gateway.docker.internal',
+		'127.0.0.1',
+		'::1',
+	];
 
 	public function __construct( $host, $token, $options = [] ) {
 		$this->host    = $host;
@@ -18,16 +25,10 @@ class Client
 			$this->options['version'] = 1;
 		}
 
-		$localhosts = [
-			'localhost',
-			'host.docker.internal',
-			'127.0.0.1',
-			'::1',
-		];
-
 		$parts = parse_url( $host );
+		$parsedHost = strtolower( trim( (string) ( $parts['host'] ?? '' ) ) );
 
-		if ( in_array( $parts['host'], $localhosts ) ) {
+		if ( $this->isLocalDevHost( $parsedHost ) ) {
 			$this->localhost = true;
 		}
 
@@ -118,6 +119,21 @@ class Client
 
 	public function isLocalhost() {
 		return $this->localhost;
+	}
+
+	private function isLocalDevHost( $host ) {
+		if ( '' === $host ) {
+			return false;
+		}
+
+		if ( in_array( $host, self::LOCAL_DEV_HOSTS, true ) ) {
+			return true;
+		}
+
+		return str_ends_with( $host, '.ddev.site' )
+			|| str_ends_with( $host, '.localhost' )
+			|| str_ends_with( $host, '.local' )
+			|| str_ends_with( $host, '.test' );
 	}
 
 	/**
