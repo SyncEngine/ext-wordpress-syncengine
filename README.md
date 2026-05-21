@@ -7,6 +7,8 @@ WordPress plugin that enhances and extends the integration between WordPress and
 - **Enhanced REST API queries** — adds advanced meta filtering params to all post type, taxonomy, user, and attachment endpoints
 - **Automatic event triggers** — fires connected SyncEngine automations on WordPress Core events (posts, terms, users)
 - **Custom hook mappings** — map any WordPress action hook to one or more SyncEngine automation endpoints via the admin UI
+- **On-demand endpoint status checks** — endpoint status is loaded per endpoint via AJAX only when requested from the actions column
+- **Trace counters in status view** — endpoint status responses show `running`, `scheduled`, and `queued` counters inline
 - **Auto-refresh** — the trigger endpoint map is automatically refreshed when a WordPress connection is tested or a related automation is saved in SyncEngine
 - **Developer extension points** — code-level filters for modifying payloads, blocking dispatches, and reacting to results
 - **WooCommerce support** (optional) — triggers automations on WooCommerce events (customers, orders, products, product variations, coupons) when WooCommerce is active
@@ -55,6 +57,31 @@ Map arbitrary WordPress action hooks to one or more automation endpoints. Each r
 | **Accepted args** | Number of hook arguments forwarded to the payload (default: `99`) |
 
 Rows can be added dynamically. Definitions are stored under `syncengine[hooks][custom]`.
+
+---
+
+## Admin Connector
+
+Navigate to **Tools → SyncEngine** to access the connector UI.
+
+### Tabs
+
+The admin page is split into three tabs:
+
+- **Connector** — connection settings, current API status, endpoint list, per-endpoint actions
+- **Trigger Maps & Debug** — module-provided trigger map sections plus recent dispatch log tools
+- **Custom Hooks Config** — custom WordPress hook-to-endpoint mappings with dynamic row addition
+
+### Endpoint Status Behavior
+
+Endpoint status is intentionally **not preloaded** for all rows. Instead:
+
+- Use **Load status** in a specific endpoint row to fetch that endpoint's status via AJAX
+- The request targets `admin-ajax.php` using the `syncengine_get_endpoint_status` action and a nonce check
+- The status cell is updated inline without reloading the page
+- The trace cell is populated with counters derived from the API response arrays: `running`, `scheduled`, and `queued`
+
+This keeps the endpoint table responsive and avoids unnecessary status calls.
 
 ---
 
