@@ -40,6 +40,10 @@ class Client
 		delete_transient( 'syncengine_api_endpoints' );
 	}
 
+	private function getEndpointStatusCacheKey( $endpoint ) {
+		return 'syncengine_api_endpoint_status_' . md5( trim( (string) $endpoint, '/' ) );
+	}
+
 	public function request( $endpoint, $method = 'GET', $options = [] ) {
 
 		$options = array_merge( $this->options, $options );
@@ -177,6 +181,62 @@ class Client
 		}
 
 		return $result ?? [];
+	}
+
+	public function getEndpointStatus( $endpoint, $refresh = false ) {
+		$endpoint = trim( (string) $endpoint, '/' );
+		if ( '' === $endpoint ) {
+			return [ 'success' => false, 'error' => 'Invalid endpoint.', 'status' => 'unknown' ];
+		}
+
+		$cacheKey = $this->getEndpointStatusCacheKey( $endpoint );
+		if ( ! $refresh ) {
+			$cache = get_transient( $cacheKey );
+			if ( is_array( $cache ) ) {
+				return $cache;
+			}
+		}
+
+		$result = $this->request( 'endpoint/' . $endpoint . '/status', 'GET', [ 'version' => false ] );
+		if ( is_wp_error( $result ) ) {
+			$result = [
+				'success' => false,
+				'error'   => $result->get_error_message(),
+				'status'  => 'unknown',
+			];
+		} elseif ( is_string( $result ) ) {
+			$result = [
+				'success' => false,
+				'error'   => $result,
+				'status'  => 'unknown',
+			];
+		} elseif ( ! is_array( $result ) ) {
+			$result = [
+				'success' => false,
+				'error'   => 'Invalid endpoint status response.',
+				'status'  => 'unknown',
+			];
+		}
+
+		set_transient( $cacheKey, $result, 10 );
+
+		return $result;
+	}
+
+	public function getEndpointStatuses( $endpoints, $refresh = false ) {
+		$statuses = [];
+
+		foreach ( (array) $endpoints as $endpoint ) {
+			$slug = is_array( $endpoint ) ? (string) ( $endpoint['endpoint'] ?? '' ) : (string) $endpoint;
+			$slug = trim( $slug, '/' );
+			if ( '' === $slug ) {
+				continue;
+			}
+
+			$statuses[ $slug ] = $this->getEndpointStatus( $slug, $refresh );
+		}
+
+		return $statuses;
 	}
 
 	public function executeEndpoint( $endpoint ) {
