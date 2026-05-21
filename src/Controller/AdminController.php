@@ -4,18 +4,19 @@ namespace SyncEngine\WordPress\Controller;
 
 use SyncEngine\WordPress\Api\Client;
 use SyncEngine\WordPress\Service\ClientService;
-use SyncEngine\WordPress\Service\ErrorNoticeService;
 use SyncEngine\WordPress\Service\DispatchLogService;
+use SyncEngine\WordPress\Service\ErrorNoticeService;
 use SyncEngine\WordPress\Service\Singleton;
 
 class AdminController extends Singleton
 {
 	const CAPABILITY = 'syncengine';
+
 	protected $option_name = 'syncengine';
 
 	public function register() {
-		add_action( 'admin_menu', array( $this, 'action_admin_menu' ) );
-		add_action( 'admin_init', array( $this, 'action_admin_init' ) );
+		add_action( 'admin_menu', [ $this, 'action_admin_menu' ] );
+		add_action( 'admin_init', [ $this, 'action_admin_init' ] );
 	}
 
 	public function action_admin_menu() {
@@ -30,7 +31,7 @@ class AdminController extends Singleton
 			__( 'SyncEngine', 'syncengine' ),
 			$cap,
 			'syncengine',
-			array( $this, 'page' ),
+			[ $this, 'page' ],
 		);
 	}
 
@@ -50,20 +51,20 @@ class AdminController extends Singleton
 	public function register_section_api() {
 		add_settings_section(
 			'api',
-			__( 'Connect to API' ),
-			array( $this, 'settings_api_section' ),
+			__( 'Connect to API', 'syncengine' ),
+			[ $this, 'settings_api_section' ],
 			'syncengine'
 		);
 
 		add_settings_field(
 			'host',
-			__( 'Domain/Host' ),
-			array( $this, 'settings_api_field_input' ),
+			__( 'Domain/Host', 'syncengine' ),
+			[ $this, 'settings_api_field_input' ],
 			'syncengine',
 			'api',
 			[
 				'name'        => 'host',
-				'placeholder' => __( 'https://' ),
+				'placeholder' => __( 'https://', 'syncengine' ),
 				'section'     => 'api',
 				'setting'     => $this->option_name,
 			]
@@ -71,14 +72,14 @@ class AdminController extends Singleton
 
 		add_settings_field(
 			'token',
-			__( 'Token' ),
-			array( $this, 'settings_api_field_input' ),
+			__( 'Token', 'syncengine' ),
+			[ $this, 'settings_api_field_input' ],
 			'syncengine',
 			'api',
 			[
 				'type'        => is_super_admin() ? 'text' : 'password',
 				'name'        => 'token',
-				'placeholder' => __( '#' ),
+				'placeholder' => __( '#', 'syncengine' ),
 				'section'     => 'api',
 				'setting'     => $this->option_name,
 			]
@@ -86,48 +87,31 @@ class AdminController extends Singleton
 
 		add_settings_field(
 			'auth_header',
-			__( 'Auth Header' ),
-			array( $this, 'settings_api_field_input' ),
+			__( 'Auth Header', 'syncengine' ),
+			[ $this, 'settings_api_field_input' ],
 			'syncengine',
 			'api',
 			[
 				'name'        => 'auth_header',
-				'placeholder' => __( 'Bearer token (default)' ),
+				'placeholder' => __( 'Bearer token (default)', 'syncengine' ),
 				'section'     => 'api',
 				'setting'     => $this->option_name,
 			]
 		);
-
-		/*
-		add_settings_field(
-			'version',
-			__( 'Version' ),
-			array( $this, 'settings_api_field_input' ),
-			'syncengine',
-			'api',
-			[
-				'type'        => 'number',
-				'name'        => 'version',
-				'placeholder' => __( '1' ),
-				'section'     => 'api',
-				'setting'     => $this->option_name,
-			]
-		);
-		*/
 	}
 
 	public function register_section_hooks() {
 		add_settings_section(
 			'hooks',
-			__( 'SyncEngine Hooks' ),
-			array( $this, 'settings_api_section' ),
+			__( 'SyncEngine Hooks', 'syncengine' ),
+			[ $this, 'settings_api_section' ],
 			'syncengine'
 		);
 
 		add_settings_field(
 			'hooks',
-			__( 'Hooks' ),
-			array( $this, 'settings_api_field_hooks' ),
+			__( 'Hooks', 'syncengine' ),
+			[ $this, 'settings_api_field_hooks' ],
 			'syncengine',
 			'hooks',
 		);
@@ -136,9 +120,7 @@ class AdminController extends Singleton
 	public function page() {
 		$settings = get_option( $this->option_name );
 		$result = null;
-
 		$url = remove_query_arg( 'settings-updated' );
-
 		$api = ClientService::get_instance()->getClient() ?? new Client( '', '', [] );
 
 		if ( ! empty( $_GET['refresh'] ) || ! empty( $_GET['settings-updated'] ) ) {
@@ -168,7 +150,7 @@ class AdminController extends Singleton
 		$url = (string) ( $context->url ?? $url );
 		$result = $context->result ?? $result;
 
-		$status    = $api->status();
+		$status = $api->status();
 		$endpoints = $api->listEndpoints();
 		$dispatchLog = DispatchLogService::get_instance()->getLatest( 25 );
 
@@ -181,66 +163,168 @@ class AdminController extends Singleton
 
 		$context->status = $status;
 		$context->endpoints = $endpoints;
-		$context->endpointStatuses = $endpointStatuses;
 		$context->url = $url;
 		$context->result = $result;
-
 		?>
 		<div class="wrap">
-			<form action='options.php' method='post'>
-				<h1>
-					<img src="<?= \SyncEngine::get_url() . 'assets/img/icon.svg' ?>" alt="SyncEngine" style="width: 1.2em;height: 1.2em;display: inline-block;vertical-align: bottom;margin-right: .2em;"/>
-					<?= __( 'SyncEngine', 'syncengine' ) ?>
-				</h1>
-				<?php
-				settings_fields( 'syncengine' );
-				do_settings_sections( 'syncengine' );
-				submit_button();
-				?>
-			</form>
+			<h1>
+				<img src="<?= \SyncEngine::get_url() . 'assets/img/icon.svg' ?>" alt="SyncEngine" style="width: 1.2em; height: 1.2em; display: inline-block; vertical-align: bottom; margin-right: .2em;"/>
+				<?= __( 'SyncEngine', 'syncengine' ) ?>
+			</h1>
 
-			<p>Status: <?= $status ?></p>
+			<h2 class="nav-tab-wrapper" style="margin-bottom: 1em;">
+				<a href="#syncengine-tab-connection" class="nav-tab nav-tab-active" data-syncengine-tab="connection"><?= esc_html__( 'Connector', 'syncengine' ) ?></a>
+				<a href="#syncengine-tab-debug" class="nav-tab" data-syncengine-tab="debug"><?= esc_html__( 'Trigger Maps & Debug', 'syncengine' ) ?></a>
+				<a href="#syncengine-tab-hooks" class="nav-tab" data-syncengine-tab="hooks"><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></a>
+			</h2>
 
-			<a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>">Refresh</a>
-			<?php if ( $api->isOnline() && $endpoints ): ?>
-			<div>
-				<h2><?= __( 'Endpoints', 'syncengine' ) ?></h2>
-				<table class="widefat striped" style="margin-top: .5em; max-width: 1100px;">
-					<thead>
-						<tr>
-							<th><?= esc_html__( 'Name', 'syncengine' ) ?></th>
-							<th><?= esc_html__( 'Endpoint', 'syncengine' ) ?></th>
-							<th><?= esc_html__( 'Status', 'syncengine' ) ?></th>
-							<th><?= esc_html__( 'Trace', 'syncengine' ) ?></th>
-							<th><?= esc_html__( 'Actions', 'syncengine' ) ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $endpoints as $endpoint ): ?>
-							<?php
-							$endpointSlug = trim( (string) ( $endpoint['endpoint'] ?? '' ) );
-							?>
-					<tr class="syncengine-endpoint-row" data-endpoint="<?= esc_attr( $endpointSlug ) ?>">
-						<td><?= esc_html( (string) ( $endpoint['name'] ?? $endpointSlug ) ) ?></td>
-						<td><code><?= esc_html( $endpointSlug ) ?></code></td>
-						<td class="syncengine-status-cell"><em><?= esc_html__( 'not loaded', 'syncengine' ) ?></em></td>
-						<td class="syncengine-trace-cell"></td>
-								<td>
-									<button class="button syncengine-load-status-btn" type="button" data-endpoint="<?= esc_attr( $endpointSlug ) ?>" data-nonce="<?= esc_attr( $nonce ) ?>"><?= esc_html__( 'Load status', 'syncengine' ) ?></button>
-									<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpointSlug, $url ) ?>"><?= esc_html__( 'Execute', 'syncengine' ) ?></a>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
+			<div id="syncengine-tab-connection" class="syncengine-tab-panel" data-syncengine-tab-panel="connection">
+				<form action="options.php" method="post" style="margin-bottom: 1.5em;">
+					<?php settings_fields( 'syncengine' ); ?>
+					<h2><?= esc_html__( 'Connection Config', 'syncengine' ) ?></h2>
+					<table class="form-table" role="presentation">
+						<?php do_settings_fields( 'syncengine', 'api' ); ?>
+					</table>
+					<?php submit_button( __( 'Save Connection Settings', 'syncengine' ) ); ?>
+				</form>
+
+				<p><strong><?= esc_html__( 'Status:', 'syncengine' ) ?></strong> <?= esc_html( (string) $status ) ?></p>
+				<p><a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>"><?= esc_html__( 'Refresh', 'syncengine' ) ?></a></p>
+
+				<?php if ( $api->isOnline() && $endpoints ): ?>
+					<div>
+						<h2><?= __( 'Endpoints', 'syncengine' ) ?></h2>
+						<table class="widefat striped" style="margin-top: .5em; max-width: 1100px;">
+							<thead>
+								<tr>
+									<th><?= esc_html__( 'Name', 'syncengine' ) ?></th>
+									<th><?= esc_html__( 'Endpoint', 'syncengine' ) ?></th>
+									<th><?= esc_html__( 'Status', 'syncengine' ) ?></th>
+									<th><?= esc_html__( 'Trace', 'syncengine' ) ?></th>
+									<th><?= esc_html__( 'Actions', 'syncengine' ) ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $endpoints as $endpoint ): ?>
+									<?php $endpointSlug = trim( (string) ( $endpoint['endpoint'] ?? '' ) ); ?>
+									<tr class="syncengine-endpoint-row" data-endpoint="<?= esc_attr( $endpointSlug ) ?>">
+										<td><?= esc_html( (string) ( $endpoint['name'] ?? $endpointSlug ) ) ?></td>
+										<td><code><?= esc_html( $endpointSlug ) ?></code></td>
+										<td class="syncengine-status-cell"><em><?= esc_html__( 'not loaded', 'syncengine' ) ?></em></td>
+										<td class="syncengine-trace-cell"></td>
+										<td>
+											<button class="button syncengine-load-status-btn" type="button" data-endpoint="<?= esc_attr( $endpointSlug ) ?>" data-nonce="<?= esc_attr( $nonce ) ?>"><?= esc_html__( 'Load status', 'syncengine' ) ?></button>
+											<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpointSlug, $url ) ?>"><?= esc_html__( 'Execute', 'syncengine' ) ?></a>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $result ) ): ?>
+					<div style="margin-top: 1em;">
+						<h2><?= __( 'Execute Results', 'syncengine' ) ?></h2>
+						<div class="code" style="background: #fff; padding: 1em;">
+							<pre style="margin: 0"><?= json_encode( $result, JSON_PRETTY_PRINT ) ?></pre>
+						</div>
+					</div>
+				<?php endif; ?>
 			</div>
-			<?php endif; ?>
+
+			<div id="syncengine-tab-debug" class="syncengine-tab-panel" data-syncengine-tab-panel="debug" style="display:none;">
+				<div style="margin-top: 1em;">
+					<h2><?= __( 'Trigger Debug', 'syncengine' ) ?></h2>
+					<p><a class="button" href="<?= add_query_arg( 'clear_dispatch_log', true, $url ) ?>"><?= __( 'Clear Dispatch Log', 'syncengine' ) ?></a></p>
+
+					<div class="code" style="background: #fff; padding: 1em; margin-bottom: 1em;">
+						<h3 style="margin-top: 0;"><?= __( 'Recent Dispatches (latest 25)', 'syncengine' ) ?></h3>
+						<?php if ( ! empty( $dispatchLog ) ): ?>
+							<table class="widefat striped" style="margin-top: .5em;">
+								<thead>
+									<tr>
+										<th><?= __( 'Time', 'syncengine' ) ?></th>
+										<th><?= __( 'Source', 'syncengine' ) ?></th>
+										<th><?= __( 'Trigger', 'syncengine' ) ?></th>
+										<th><?= __( 'Endpoint', 'syncengine' ) ?></th>
+										<th><?= __( 'Success', 'syncengine' ) ?></th>
+										<th><?= __( 'Payload Size', 'syncengine' ) ?></th>
+										<th><?= __( 'Error', 'syncengine' ) ?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ( $dispatchLog as $entry ): ?>
+										<tr>
+											<td><?= date_i18n( 'Y-m-d H:i:s', (int) ( $entry['timestamp'] ?? 0 ) ) ?></td>
+											<td><?= esc_html( (string) ( $entry['source'] ?? '' ) ) ?></td>
+											<td><?= esc_html( (string) ( $entry['trigger'] ?? '' ) ) ?></td>
+											<td><?= esc_html( (string) ( $entry['endpoint'] ?? '' ) ) ?></td>
+											<td><?= ! empty( $entry['success'] ) ? 'yes' : 'no' ?></td>
+											<td><?= (int) ( $entry['payload_size'] ?? 0 ) ?></td>
+											<td><?= esc_html( (string) ( $entry['error'] ?? '' ) ) ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						<?php else: ?>
+							<p><?= __( 'No dispatch log entries yet.', 'syncengine' ) ?></p>
+						<?php endif; ?>
+					</div>
+
+					<?php do_action( 'syncengine_admin_render_trigger_debug_sections', $context ); ?>
+					<?php do_action( 'syncengine_admin_render_sections', $context ); ?>
+				</div>
+			</div>
+
+			<div id="syncengine-tab-hooks" class="syncengine-tab-panel" data-syncengine-tab-panel="hooks" style="display:none;">
+				<form action="options.php" method="post" style="margin-top: 1em;">
+					<?php settings_fields( 'syncengine' ); ?>
+					<h2><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></h2>
+					<table class="form-table" role="presentation">
+						<?php do_settings_fields( 'syncengine', 'hooks' ); ?>
+					</table>
+					<?php submit_button( __( 'Save Custom Hooks', 'syncengine' ) ); ?>
+				</form>
+			</div>
 
 			<script type="text/javascript">
 			(function() {
-				const ajax_url = <?= wp_json_encode( admin_url( 'admin-ajax.php' ) ) ?>;
+				const tabLinks = document.querySelectorAll('[data-syncengine-tab]');
+				const tabPanels = document.querySelectorAll('[data-syncengine-tab-panel]');
+				const currentHash = window.location.hash ? window.location.hash.substring(1) : '';
+
+				function showTab(tabName) {
+					tabLinks.forEach(function(link) {
+						link.classList.toggle('nav-tab-active', link.getAttribute('data-syncengine-tab') === tabName);
+					});
+
+					tabPanels.forEach(function(panel) {
+						panel.style.display = panel.getAttribute('data-syncengine-tab-panel') === tabName ? '' : 'none';
+					});
+				}
+
+				if (currentHash === 'syncengine-tab-debug') {
+					showTab('debug');
+				} else if (currentHash === 'syncengine-tab-hooks') {
+					showTab('hooks');
+				}
+
+				tabLinks.forEach(function(link) {
+					link.addEventListener('click', function(e) {
+						e.preventDefault();
+						const tab = link.getAttribute('data-syncengine-tab');
+						if (!tab) {
+							return;
+						}
+						showTab(tab);
+						window.location.hash = 'syncengine-tab-' + tab;
+					});
+				});
+
+				const ajaxUrl = <?= wp_json_encode( admin_url( 'admin-ajax.php' ) ) ?>;
 				const buttons = document.querySelectorAll('.syncengine-load-status-btn');
-				
+
 				buttons.forEach(function(btn) {
 					btn.addEventListener('click', function(e) {
 						e.preventDefault();
@@ -248,11 +332,11 @@ class AdminController extends Singleton
 						const nonce = btn.dataset.nonce;
 						const row = btn.closest('tr');
 						const originalText = btn.textContent;
-						
+
 						btn.disabled = true;
 						btn.textContent = '<?= esc_js( __( 'Loading...', 'syncengine' ) ) ?>';
-						
-						fetch(ajax_url, {
+
+						fetch(ajaxUrl, {
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/x-www-form-urlencoded',
@@ -263,101 +347,41 @@ class AdminController extends Singleton
 								endpoint: endpoint
 							})
 						})
-						.then(response => response.json())
-						.then(data => {
+						.then(function(response) { return response.json(); })
+						.then(function(data) {
 							if (data.success) {
-								const status = data.data.status || 'unknown';
-								let statusLabel = status;
-								
-								if (data.data.message) {
-									statusLabel += ' - ' + data.data.message;
+								const payload = data.data || {};
+								let statusLabel = payload.status || 'unknown';
+								if (payload.message) {
+									statusLabel += ' - ' + payload.message;
 								}
-								if (data.data.error) {
-									statusLabel += ' - ' + data.data.error;
-								}
-								
-								// Build trace counters
-								const runningCount = Array.isArray(data.data.running) ? data.data.running.length : 0;
-								const scheduledCount = Array.isArray(data.data.scheduled) ? data.data.scheduled.length : 0;
-								const queuedCount = Array.isArray(data.data.queued) ? data.data.queued.length : 0;
-								
-								let traceLabel = '';
-								if (runningCount > 0) traceLabel += 'running: ' + runningCount;
-								if (scheduledCount > 0) traceLabel += (traceLabel ? ' | ' : '') + 'scheduled: ' + scheduledCount;
-								if (queuedCount > 0) traceLabel += (traceLabel ? ' | ' : '') + 'queued: ' + queuedCount;
-								
+
+								const runningCount = Array.isArray(payload.running) ? payload.running.length : 0;
+								const scheduledCount = Array.isArray(payload.scheduled) ? payload.scheduled.length : 0;
+								const queuedCount = Array.isArray(payload.queued) ? payload.queued.length : 0;
+								const traceLabel = 'running: ' + runningCount + ' | scheduled: ' + scheduledCount + ' | queued: ' + queuedCount;
+
 								row.querySelector('.syncengine-status-cell').textContent = statusLabel;
-								row.querySelector('.syncengine-trace-cell').textContent = traceLabel || '—';
+								row.querySelector('.syncengine-trace-cell').textContent = traceLabel;
 								btn.textContent = '<?= esc_js( __( 'Refresh status', 'syncengine' ) ) ?>';
 							} else {
-								const errorMsg = data.data?.message || '<?= esc_js( __( 'Failed to load status', 'syncengine' ) ) ?>';
-								row.querySelector('.syncengine-status-cell').textContent = 'Error: ' + errorMsg;
+								const message = data && data.data && data.data.message
+									? data.data.message
+									: '<?= esc_js( __( 'Failed to load status', 'syncengine' ) ) ?>';
+								row.querySelector('.syncengine-status-cell').textContent = 'Error: ' + message;
 							}
+
 							btn.disabled = false;
 						})
-						.catch(error => {
+						.catch(function(error) {
 							row.querySelector('.syncengine-status-cell').textContent = 'Error: ' + error.message;
 							btn.disabled = false;
 							btn.textContent = originalText;
 						});
+					});
 				});
-			});
 			})();
 			</script>
-
-			<?php if ( ! empty( $result ) ): ?>
-			<div>
-				<h2><?= __( 'Execute results', 'syncengine' ) ?></h2>
-				<div class="code" style="background: #fff; padding: 1em;">
-					<pre style="margin: 0"><?= json_encode( $result, JSON_PRETTY_PRINT ) ?></pre>
-				</div>
-			</div>
-			<?php endif; ?>
-
-			<div style="margin-top: 2em;">
-				<h2><?= __( 'Trigger Debug', 'syncengine' ) ?></h2>
-				<p>
-					<a class="button" href="<?= add_query_arg( 'clear_dispatch_log', true, $url ) ?>"><?= __( 'Clear dispatch log', 'syncengine' ) ?></a>
-				</p>
-
-				<div class="code" style="background: #fff; padding: 1em; margin-bottom: 1em;">
-					<h3 style="margin-top: 0;"><?= __( 'Recent Dispatches (latest 25)', 'syncengine' ) ?></h3>
-					<?php if ( ! empty( $dispatchLog ) ): ?>
-					<table class="widefat striped" style="margin-top: .5em;">
-						<thead>
-							<tr>
-								<th><?= __( 'Time', 'syncengine' ) ?></th>
-								<th><?= __( 'Source', 'syncengine' ) ?></th>
-								<th><?= __( 'Trigger', 'syncengine' ) ?></th>
-								<th><?= __( 'Endpoint', 'syncengine' ) ?></th>
-								<th><?= __( 'Success', 'syncengine' ) ?></th>
-								<th><?= __( 'Payload Size', 'syncengine' ) ?></th>
-								<th><?= __( 'Error', 'syncengine' ) ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ( $dispatchLog as $entry ): ?>
-							<tr>
-								<td><?= date_i18n( 'Y-m-d H:i:s', (int) ( $entry['timestamp'] ?? 0 ) ) ?></td>
-								<td><?= esc_html( (string) ( $entry['source'] ?? '' ) ) ?></td>
-								<td><?= esc_html( (string) ( $entry['trigger'] ?? '' ) ) ?></td>
-								<td><?= esc_html( (string) ( $entry['endpoint'] ?? '' ) ) ?></td>
-								<td><?= ! empty( $entry['success'] ) ? 'yes' : 'no' ?></td>
-								<td><?= (int) ( $entry['payload_size'] ?? 0 ) ?></td>
-								<td><?= esc_html( (string) ( $entry['error'] ?? '' ) ) ?></td>
-							</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-					<?php else: ?>
-					<p><?= __( 'No dispatch log entries yet.', 'syncengine' ) ?></p>
-					<?php endif; ?>
-				</div>
-
-				<?php do_action( 'syncengine_admin_render_trigger_debug_sections', $context ); ?>
-			</div>
-
-			<?php do_action( 'syncengine_admin_render_sections', $context ); ?>
 		</div>
 		<?php
 	}
@@ -370,11 +394,10 @@ class AdminController extends Singleton
 		$type = $args['type'] ?? 'text';
 		$options = get_option( $args['setting'] );
 		$id = $args['setting'] . '_' . $args['section'] . '_' . $args['name'];
-		$name = $args['setting'] . '[' . $args['section'] . ']' . '[' . $args['name'] . ']';
-
+		$name = $args['setting'] . '[' . $args['section'] . '][' . $args['name'] . ']';
 		$value = $options[ $args['section'] ][ $args['name'] ] ?? '';
 		?>
-		<input id="<?= $id ?>" type="<?= $type ?>" name="<?= $name; ?>" value="<?= $value; ?>" placeholder="<?= $args['placeholder'] ?? $args['label'] ?? $args['title'] ?>" />
+		<input id="<?= esc_attr( $id ) ?>" type="<?= esc_attr( $type ) ?>" name="<?= esc_attr( $name ) ?>" value="<?= esc_attr( (string) $value ) ?>" placeholder="<?= esc_attr( (string) ( $args['placeholder'] ?? $args['label'] ?? $args['title'] ?? '' ) ) ?>" />
 		<?php
 	}
 
@@ -582,7 +605,6 @@ class AdminController extends Singleton
 		$status = $api->getEndpointStatus( $endpoint, true );
 
 		if ( ! empty( $status['success'] ) ) {
-			// Extract only the fields we need to avoid double-wrapping
 			wp_send_json_success( [
 				'status'    => $status['status'] ?? 'unknown',
 				'message'   => $status['message'] ?? '',
