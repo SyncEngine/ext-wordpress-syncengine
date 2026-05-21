@@ -3,6 +3,7 @@
 namespace SyncEngine\WordPress\Controller;
 
 use SyncEngine\WordPress\Api\Client;
+use SyncEngine\WordPress\Service\ClientService;
 use SyncEngine\WordPress\Service\ErrorNoticeService;
 use SyncEngine\WordPress\Service\DispatchLogService;
 use SyncEngine\WordPress\Service\Singleton;
@@ -138,13 +139,7 @@ class AdminController extends Singleton
 
 		$url = remove_query_arg( 'settings-updated' );
 
-		$api_settings = $settings['api'] ?? [];
-
-		$api = new Client(
-			$api_settings['host'] ?? '',
-			$api_settings['token'] ?? '',
-			$api_settings,
-		);
+		$api = ClientService::get_instance()->getClient() ?? new Client( '', '', [] );
 
 		if ( ! empty( $_GET['refresh'] ) || ! empty( $_GET['settings-updated'] ) ) {
 			$api->clearCache();
@@ -182,8 +177,11 @@ class AdminController extends Singleton
 			$endpoints = [];
 		}
 
+		$nonce = wp_create_nonce( 'syncengine_get_endpoint_status' );
+
 		$context->status = $status;
 		$context->endpoints = $endpoints;
+		$context->endpointStatuses = $endpointStatuses;
 		$context->url = $url;
 		$context->result = $result;
 
@@ -206,12 +204,97 @@ class AdminController extends Singleton
 			<a class="button" href="<?= add_query_arg( 'refresh', true, $url ) ?>">Refresh</a>
 			<?php if ( $api->isOnline() && $endpoints ): ?>
 			<div>
-				<h2><?= __( 'Run automations manually', 'syncengine' ) ?></h2>
-				<?php foreach ( $endpoints as $endpoint ): ?>
-				<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpoint['endpoint'], $url ) ?>"><?= $endpoint['name'] ?></a>
-				<?php endforeach; ?>
+				<h2><?= __( 'Endpoints', 'syncengine' ) ?></h2>
+				<table class="widefat striped" style="margin-top: .5em; max-width: 1100px;">
+					<thead>
+						<tr>
+							<th><?= esc_html__( 'Name', 'syncengine' ) ?></th>
+							<th><?= esc_html__( 'Endpoint', 'syncengine' ) ?></th>
+							<th><?= esc_html__( 'Status', 'syncengine' ) ?></th>
+							<th><?= esc_html__( 'Trace', 'syncengine' ) ?></th>
+							<th><?= esc_html__( 'Actions', 'syncengine' ) ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $endpoints as $endpoint ): ?>
+							<?php
+							$endpointSlug = trim( (string) ( $endpoint['endpoint'] ?? '' ) );
+							?>
+					<tr class="syncengine-endpoint-row" data-endpoint="<?= esc_attr( $endpointSlug ) ?>">
+						<td><?= esc_html( (string) ( $endpoint['name'] ?? $endpointSlug ) ) ?></td>
+						<td><code><?= esc_html( $endpointSlug ) ?></code></td>
+						<td class="syncengine-status-cell"><em><?= esc_html__( 'not loaded', 'syncengine' ) ?></em></td>
+						<td class="syncengine-trace-cell"></td>
+								<td>
+									<button class="button syncengine-load-status-btn" type="button" data-endpoint="<?= esc_attr( $endpointSlug ) ?>" data-nonce="<?= esc_attr( $nonce ) ?>"><?= esc_html__( 'Load status', 'syncengine' ) ?></button>
+									<a class="button" href="<?= add_query_arg( 'execute_endpoint', $endpointSlug, $url ) ?>"><?= esc_html__( 'Execute', 'syncengine' ) ?></a>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
 			</div>
 			<?php endif; ?>
+
+			<script type="text/javascript">
+			(function() {
+				const ajax_url = <?= wp_json_encode( admin_url( 'admin-ajax.php' ) ) ?>;
+				const buttons = document.querySelectorAll('.syncengine-load-status-btn');
+				
+				buttons.forEach(function(btn) {
+					btn.addEventListener('click', function(e) {
+						e.preventDefault();
+						const endpoint = btn.dataset.endpoint;
+						const nonce = btn.dataset.nonce;
+						const row = btn.closest('tr');
+						const originalText = btn.textContent;
+						
+						btn.disabled = true;
+						btn.textContent = '<?= esc_js( __( 'Loading...', 'syncengine' ) ) ?>';
+						
+						fetch(ajax_url, {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded',
+							},
+							body: new URLSearchParams({
+								action: 'syncengine_get_endpoint_status',
+								nonce: nonce,
+								endpoint: endpoint
+							})
+						})
+						.then(response => response.json())
+						.then(data => {
+							if (data.success) {
+								const status = data.data.status || 'unknown';
+								const trace = data.data.trace || '';
+								let statusLabel = status;
+								
+								if (data.data.message) {
+									statusLabel += ' - ' + data.data.message;
+								}
+								if (data.data.error) {
+									statusLabel += ' - ' + data.data.error;
+								}
+								
+								row.querySelector('.syncengine-status-cell').textContent = statusLabel;
+								row.querySelector('.syncengine-trace-cell').textContent = trace;
+								btn.textContent = '<?= esc_js( __( 'Refresh status', 'syncengine' ) ) ?>';
+							} else {
+								const errorMsg = data.data?.message || '<?= esc_js( __( 'Failed to load status', 'syncengine' ) ) ?>';
+								row.querySelector('.syncengine-status-cell').textContent = 'Error: ' + errorMsg;
+							}
+							btn.disabled = false;
+						})
+						.catch(error => {
+							row.querySelector('.syncengine-status-cell').textContent = 'Error: ' + error.message;
+							btn.disabled = false;
+							btn.textContent = originalText;
+						});
+				});
+			});
+			})();
+			</script>
 
 			<?php if ( ! empty( $result ) ): ?>
 			<div>
@@ -291,12 +374,7 @@ class AdminController extends Singleton
 		$hooks = array_values( array_filter( (array) ( $options['hooks']['custom'] ?? [] ), 'is_array' ) );
 		$hooks = ! empty( $hooks ) ? $hooks : [ [] ];
 
-		$api_settings = (array) ( $options['api'] ?? [] );
-		$api = new Client(
-			$api_settings['host'] ?? '',
-			$api_settings['token'] ?? '',
-			$api_settings,
-		);
+		$api = ClientService::get_instance()->getClient() ?? new Client( '', '', [] );
 		$endpointsResponse = $api->listEndpoints();
 		$availableEndpoints = [];
 		if ( is_array( $endpointsResponse ) ) {
@@ -471,5 +549,33 @@ class AdminController extends Singleton
 		return [
 			'custom' => $customHooks,
 		];
+	}
+
+	public function ajax_get_endpoint_status() {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'syncengine_get_endpoint_status' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Security check failed.', 'syncengine' ) ], 403 );
+		}
+
+		if ( ! isset( $_POST['endpoint'] ) ) {
+			wp_send_json_error( [ 'message' => __( 'Endpoint not specified.', 'syncengine' ) ] );
+		}
+
+		$endpoint = trim( (string) $_POST['endpoint'], '/' );
+		if ( '' === $endpoint ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid endpoint.', 'syncengine' ) ] );
+		}
+
+		$api = ClientService::get_instance()->getClient();
+		if ( ! $api ) {
+			wp_send_json_error( [ 'message' => __( 'API settings not configured.', 'syncengine' ) ] );
+		}
+
+		$status = $api->getEndpointStatus( $endpoint, true );
+
+		if ( ! empty( $status['success'] ) ) {
+			wp_send_json_success( $status );
+		} else {
+			wp_send_json_error( $status );
+		}
 	}
 }

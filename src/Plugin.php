@@ -24,6 +24,7 @@ class Plugin
 
 		if ( is_admin() ) {
 			AdminController::get_instance()->register();
+			add_action( 'wp_ajax_syncengine_get_endpoint_status', [ AdminController::get_instance(), 'ajax_get_endpoint_status' ] );
 		}
 	}
 
