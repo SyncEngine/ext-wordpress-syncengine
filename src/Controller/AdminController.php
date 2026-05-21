@@ -173,9 +173,9 @@ class AdminController extends Singleton
 			</h1>
 
 			<h2 class="nav-tab-wrapper" style="margin-bottom: 1em;">
-				<a href="#syncengine-tab-connection" class="nav-tab nav-tab-active" data-syncengine-tab="connection"><?= esc_html__( 'Connector', 'syncengine' ) ?></a>
-				<a href="#syncengine-tab-debug" class="nav-tab" data-syncengine-tab="debug"><?= esc_html__( 'Trigger Maps & Debug', 'syncengine' ) ?></a>
-				<a href="#syncengine-tab-hooks" class="nav-tab" data-syncengine-tab="hooks"><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></a>
+				<a href="#syncengine-nav-connection" class="nav-tab nav-tab-active" data-syncengine-tab="connection"><?= esc_html__( 'Connector', 'syncengine' ) ?></a>
+				<a href="#syncengine-nav-debug" class="nav-tab" data-syncengine-tab="debug"><?= esc_html__( 'Trigger Maps & Debug', 'syncengine' ) ?></a>
+				<a href="#syncengine-nav-hooks" class="nav-tab" data-syncengine-tab="hooks"><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></a>
 			</h2>
 
 			<div id="syncengine-tab-connection" class="syncengine-tab-panel" data-syncengine-tab-panel="connection">
@@ -304,9 +304,9 @@ class AdminController extends Singleton
 					});
 				}
 
-				if (currentHash === 'syncengine-tab-debug') {
+				if (currentHash === 'syncengine-nav-debug') {
 					showTab('debug');
-				} else if (currentHash === 'syncengine-tab-hooks') {
+				} else if (currentHash === 'syncengine-nav-hooks') {
 					showTab('hooks');
 				}
 
@@ -318,7 +318,7 @@ class AdminController extends Singleton
 							return;
 						}
 						showTab(tab);
-						window.location.hash = 'syncengine-tab-' + tab;
+						window.location.hash = 'syncengine-nav-' + tab;
 					});
 				});
 
