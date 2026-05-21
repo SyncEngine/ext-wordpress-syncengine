@@ -267,7 +267,6 @@ class AdminController extends Singleton
 						.then(data => {
 							if (data.success) {
 								const status = data.data.status || 'unknown';
-								const trace = data.data.trace || '';
 								let statusLabel = status;
 								
 								if (data.data.message) {
@@ -277,8 +276,18 @@ class AdminController extends Singleton
 									statusLabel += ' - ' + data.data.error;
 								}
 								
+								// Build trace counters
+								const runningCount = Array.isArray(data.data.running) ? data.data.running.length : 0;
+								const scheduledCount = Array.isArray(data.data.scheduled) ? data.data.scheduled.length : 0;
+								const queuedCount = Array.isArray(data.data.queued) ? data.data.queued.length : 0;
+								
+								let traceLabel = '';
+								if (runningCount > 0) traceLabel += 'running: ' + runningCount;
+								if (scheduledCount > 0) traceLabel += (traceLabel ? ' | ' : '') + 'scheduled: ' + scheduledCount;
+								if (queuedCount > 0) traceLabel += (traceLabel ? ' | ' : '') + 'queued: ' + queuedCount;
+								
 								row.querySelector('.syncengine-status-cell').textContent = statusLabel;
-								row.querySelector('.syncengine-trace-cell').textContent = trace;
+								row.querySelector('.syncengine-trace-cell').textContent = traceLabel || '—';
 								btn.textContent = '<?= esc_js( __( 'Refresh status', 'syncengine' ) ) ?>';
 							} else {
 								const errorMsg = data.data?.message || '<?= esc_js( __( 'Failed to load status', 'syncengine' ) ) ?>';
@@ -573,9 +582,16 @@ class AdminController extends Singleton
 		$status = $api->getEndpointStatus( $endpoint, true );
 
 		if ( ! empty( $status['success'] ) ) {
-			wp_send_json_success( $status );
+			// Extract only the fields we need to avoid double-wrapping
+			wp_send_json_success( [
+				'status'    => $status['status'] ?? 'unknown',
+				'message'   => $status['message'] ?? '',
+				'running'   => $status['running'] ?? [],
+				'scheduled' => $status['scheduled'] ?? [],
+				'queued'    => $status['queued'] ?? [],
+			] );
 		} else {
-			wp_send_json_error( $status );
+			wp_send_json_error( [ 'message' => $status['error'] ?? __( 'Failed to load status.', 'syncengine' ) ] );
 		}
 	}
 }
