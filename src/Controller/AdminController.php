@@ -175,7 +175,7 @@ class AdminController extends Singleton
 			<h2 class="nav-tab-wrapper" style="margin-bottom: 1em;">
 				<a href="#syncengine-nav-connection" class="nav-tab nav-tab-active" data-syncengine-tab="connection"><?= esc_html__( 'Connector', 'syncengine' ) ?></a>
 				<a href="#syncengine-nav-debug" class="nav-tab" data-syncengine-tab="debug"><?= esc_html__( 'Trigger Maps & Debug', 'syncengine' ) ?></a>
-				<a href="#syncengine-nav-hooks" class="nav-tab" data-syncengine-tab="hooks"><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></a>
+				<a href="#syncengine-nav-hooks" class="nav-tab" data-syncengine-tab="hooks"><?= esc_html__( 'Custom Hooks', 'syncengine' ) ?></a>
 			</h2>
 
 			<div id="syncengine-tab-connection" class="syncengine-tab-panel" data-syncengine-tab-panel="connection">
@@ -280,10 +280,8 @@ class AdminController extends Singleton
 			<div id="syncengine-tab-hooks" class="syncengine-tab-panel" data-syncengine-tab-panel="hooks" style="display:none;">
 				<form action="options.php" method="post" style="margin-top: 1em;">
 					<?php settings_fields( 'syncengine' ); ?>
-					<h2><?= esc_html__( 'Custom Hooks Config', 'syncengine' ) ?></h2>
-					<table class="form-table" role="presentation">
-						<?php do_settings_fields( 'syncengine', 'hooks' ); ?>
-					</table>
+					<h2><?= esc_html__( 'Custom Hooks', 'syncengine' ) ?></h2>
+					<?php $this->settings_api_field_hooks(); ?>
 					<?php submit_button( __( 'Save Custom Hooks', 'syncengine' ) ); ?>
 				</form>
 			</div>
@@ -425,21 +423,11 @@ class AdminController extends Singleton
 		$availableEndpoints = array_values( array_unique( $availableEndpoints ) );
 		?>
 		<p><?= esc_html__( 'Define extra WordPress action hooks that should directly trigger one or more SyncEngine endpoints.', 'syncengine' ) ?></p>
-		<table class="widefat striped" style="max-width: 1100px;">
-			<thead>
-				<tr>
-					<th><?= esc_html__( 'WordPress Hook', 'syncengine' ) ?></th>
-					<th><?= esc_html__( 'Endpoints', 'syncengine' ) ?></th>
-					<th style="width: 110px;"><?= esc_html__( 'Priority', 'syncengine' ) ?></th>
-					<th style="width: 140px;"><?= esc_html__( 'Accepted Args', 'syncengine' ) ?></th>
-				</tr>
-			</thead>
-			<tbody id="syncengine-hooks-custom-rows">
-				<?php foreach ( $hooks as $index => $row ): ?>
-					<?php $this->render_hooks_row( (string) $index, (array) $row, $availableEndpoints ); ?>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
+		<div id="syncengine-hooks-custom-rows" style="max-width: 1100px; display: grid; gap: .75em;">
+			<?php foreach ( $hooks as $index => $row ): ?>
+				<?php $this->render_hooks_row( (string) $index, (array) $row, $availableEndpoints ); ?>
+			<?php endforeach; ?>
+		</div>
 		<p style="margin-top: .7em;">
 			<button type="button" class="button" id="syncengine-hooks-add-row"><?= esc_html__( 'Add hook mapping', 'syncengine' ) ?></button>
 		</p>
@@ -473,8 +461,10 @@ class AdminController extends Singleton
 		$selectedEndpoints = array_values( (array) ( $row['endpoints'] ?? [] ) );
 		$availableEndpoints = (array) $availableEndpoints;
 		?>
-		<tr>
-			<td>
+		<div class="syncengine-hook-row" style="border: 1px solid #dcdcde; border-radius: 4px; background: #fff; padding: .9em;">
+			<div style="display: grid; grid-template-columns: minmax(220px, 1.2fr) minmax(280px, 2fr) minmax(110px, .7fr) minmax(140px, .8fr); gap: .75em; align-items: start;">
+				<div>
+					<label style="display:block; font-weight: 600; margin-bottom: .35em;"><?= esc_html__( 'WordPress Hook', 'syncengine' ) ?></label>
 				<input
 					type="text"
 					name="<?= esc_attr( $this->option_name ) ?>[hooks][custom][<?= esc_attr( (string) $index ) ?>][hook]"
@@ -482,8 +472,9 @@ class AdminController extends Singleton
 					placeholder="save_post"
 					style="width: 100%;"
 				/>
-			</td>
-			<td>
+				</div>
+				<div>
+					<label style="display:block; font-weight: 600; margin-bottom: .35em;"><?= esc_html__( 'Endpoints', 'syncengine' ) ?></label>
 				<?php if ( empty( $availableEndpoints ) ): ?>
 					<span class="description"><?= esc_html__( 'No endpoints available. Check API connection and refresh.', 'syncengine' ) ?></span>
 				<?php else: ?>
@@ -501,8 +492,9 @@ class AdminController extends Singleton
 						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
-			</td>
-			<td>
+				</div>
+				<div>
+					<label style="display:block; font-weight: 600; margin-bottom: .35em;"><?= esc_html__( 'Priority', 'syncengine' ) ?></label>
 				<input
 					type="number"
 					min="1"
@@ -511,8 +503,9 @@ class AdminController extends Singleton
 					value="<?= esc_attr( (string) ( $row['priority'] ?? 10 ) ) ?>"
 					style="width: 100%;"
 				/>
-			</td>
-			<td>
+				</div>
+				<div>
+					<label style="display:block; font-weight: 600; margin-bottom: .35em;"><?= esc_html__( 'Accepted Args', 'syncengine' ) ?></label>
 				<input
 					type="number"
 					min="0"
@@ -521,8 +514,9 @@ class AdminController extends Singleton
 					value="<?= esc_attr( (string) ( $row['accepted_args'] ?? 99 ) ) ?>"
 					style="width: 100%;"
 				/>
-			</td>
-		</tr>
+				</div>
+			</div>
+		</div>
 		<?php
 	}
 
